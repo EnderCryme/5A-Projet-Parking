@@ -1,0 +1,25 @@
+import sys
+import os
+import time
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from src.sensor_manager import SensorManager
+
+def test_sensor():
+    print("--- TEST SENSOR MANAGER ---")
+    # CS Pin 1 (CE1)
+    sensor = SensorManager(cs_pin=1)
+    
+    temp = sensor.get_temperature()
+    hum = sensor.get_humidity()
+
+    if temp is not None:
+        print(f"✅ Lecture réussie !")
+        print(f"Température : {temp}°C")
+        print(f"Humidité    : {hum}%")
+    else:
+        print("⚠️ Impossible de lire le capteur (Vérifiez le câblage SPI/CS)")
+
+if __name__ == "__main__":
+    test_sensor()

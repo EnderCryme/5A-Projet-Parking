@@ -1,0 +1,22 @@
+import paho.mqtt.client as mqtt
+
+class MqttManager:
+    def __init__(self, broker="localhost", port=1883, topic_racine="parking"):
+        self.client = mqtt.Client()
+        self.topic_racine = topic_racine
+        try:
+            self.client.connect(broker, port, 60)
+            self.client.loop_start() # Lance le thread réseau en arrière-plan
+            print(f"[MQTT] Connecté au broker {broker}")
+        except:
+            print("[MQTT] ⚠️ Erreur connexion (Mosquitto est lancé ?)")
+
+    def publish(self, sous_topic, message):
+        try:
+            full_topic = f"{self.topic_racine}/{sous_topic}"
+            self.client.publish(full_topic, message)
+        except: pass
+
+    def close(self):
+        self.client.loop_stop()
+        self.client.disconnect()
