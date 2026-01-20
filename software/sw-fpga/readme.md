@@ -1,8 +1,10 @@
+
+
+> **Note** : La compilation est cross-compiler : 
+> ```bash
+> ~/parking_fpga/buildroot/output/host/bin/riscv32-buildroot-linux-gnu-gcc v4.c -o v4 -march=rv32ima -mabi=ilp32 -lmosquitto ```
+
 # Historique des Versions - Contrôleur de Barrière MQTT
-
-> La compilation est cross-compiler : 
-> ```bash ~/parking_fpga/buildroot/output/host/bin/riscv32-buildroot-linux-gnu-gcc v4.c -o v4 -march=rv32ima -mabi=ilp32 -lmosquitto ```
-
 
 ---
 
