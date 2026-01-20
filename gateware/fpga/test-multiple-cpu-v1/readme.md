@@ -141,16 +141,40 @@ Vivado a généré un fichier .bit (utilisé pour charger le FPGA temporairement
 
 Il faut donc convertir le .bit en .bin manuellement via Vivado.
 Pour cela nous allons générer un script `gen_bin.tcl`: 
+
+### 1. Création du script de conversion
+
 ```bash
-echo 'write_cfgmem -force -format bin -interface spi -size 16 -loadbit "up 0x0 ./build/nexys4ddr/gateware/nexys4ddr.bit" -file ./build/nexys4ddr/gateware/nexys4ddr.bin' > gen_bin.tcl
+cat <<EOF > gen_bin.tcl
+write_cfgmem -force -format bin -interface SPIx1 -size 16 -loadbit "up 0x0 ./build/nexys4ddr/gateware/nexys4ddr.bit" -file ./build/nexys4ddr/gateware/nexys4ddr.bin
+exit
+EOF
 ```
-Puis on execute vivado : 
+
+> **Note :** Cette commande génère un script TCL pour Vivado. Elle utilise l'outil `write_cfgmem` pour transformer le bitstream FPGA (`.bit`) en une image mémoire brute (`.bin`) compréhensible par le programmateur de flash.
+> * **`-interface SPIx1`** : Indispensable ici pour correspondre à la configuration par défaut du bitstream (Single SPI). Si on mettait `SPIx4` (Quad-SPI), Vivado rejetterait le fichier car le design n'a pas été explicitement compilé pour le mode x4.
+> * **`-size 16`** : Spécifie la taille de la puce mémoire de la Nexys4DDR (16 Mo).
+> * **`up 0x0`** : Place la configuration du FPGA au tout début de la mémoire Flash.
+> 
+> 
+
+### 2. Exécution de Vivado
+
 ```bash
 vivado -mode tcl -source gen_bin.tcl
+
 ```
 
-Puis nous pouvons flasher : 
+> **Note :** Cette commande lance Vivado en mode "TCL" (Terminal/Ligne de commande), sans charger l'interface graphique lourde. Elle exécute immédiatement les instructions du fichier `gen_bin.tcl` créé précédemment. C'est la méthode standard pour automatiser des tâches Vivado dans un terminal Linux.
+
+---
+
+### 3. Flashage (Rappel)
+
 ```bash
 python3 make.py --board=nexys4ddr --flash
+
 ```
 
+> **Note :** Cette commande utilise OpenOCD pour écrire le fichier `.bin` généré dans la mémoire non-volatile (SPI Flash) de la carte. Au prochain redémarrage électrique, le FPGA chargera cette configuration automatiquement.
+> **Attention :** Seul le Gateware (SoC + CPU) est flashé. Le noyau Linux et le système de fichiers (`rootfs`, `Image`, `dtb`) doivent être placés sur la carte SD pour un démarrage autonome.
