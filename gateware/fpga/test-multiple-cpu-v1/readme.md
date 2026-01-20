@@ -1,4 +1,4 @@
-```markdown
+
 # Guide : Activer le Dual-Core (SMP) sur Linux-on-LiteX-VexRiscv
 
 Ce document résume les modifications nécessaires pour faire tourner Linux sur un SoC LiteX avec 2 cœurs VexRiscv (SMP) sur une carte Nexys4DDR (adaptable aux autres cartes).
@@ -9,7 +9,6 @@ Compiler le bitstream en spécifiant 2 CPUs. Cela modifie la carte mémoire et l
 
 ```bash
 ./make.py --board=nexys4ddr --cpu-count=2 --build
-
 ```
 
 > **Note :** Cette étape génère un fichier DTS de base dans `build/nexys4ddr/dts/nexys4ddr.dts`, mais il est souvent incomplet (manque le 2ème CPU).
@@ -111,7 +110,7 @@ Modifier `images/boot.json` pour aligner l'adresse de chargement du `rootfs` ave
 Charger le système via le port série.
 
 ```bash
-litex_term --images=images/boot.json /dev/ttyUSBx
+python3 make.py --board=nexys4ddr --load
 
 ```
 
@@ -122,8 +121,22 @@ cat /proc/cpuinfo
 
 ```
 
-Le résultat doit afficher `processor : 0` et `processor : 1`.
+Le résultat doit afficher `processor : 0` et `processor : 1` tel que :
+```bash
+# cat /proc/cpuinfo
+processor       : 0
+hart            : 0
+isa             : rv32i2p0_ma
+mmu             : sv32
 
+processor       : 1
+hart            : 1
+isa             : rv32i2p0_ma
+mmu             : sv32
 ```
 
+Une fois validé, nous pouvons flasher le nouveau firmware :
+```bash
+python3 make.py --board=nexys4ddr --flash
 ```
+
