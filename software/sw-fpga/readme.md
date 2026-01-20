@@ -72,3 +72,6 @@ Cette version représente l'aboutissement du projet. Elle abandonne l'approche "
 * **Optimisation :** Une seule connexion MQTT (Mosquitto) est partagée pour recevoir les ordres de toutes les barrières, avec un dispatching intelligent vers la bonne structure en fonction du topic reçu.
 
 ---
+````bash 
+mosquitto_pub -h localhost -t "parking/barrier_0/state" -m "OPEN"
+```
