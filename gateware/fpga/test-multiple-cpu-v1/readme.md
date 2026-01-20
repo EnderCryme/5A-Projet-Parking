@@ -135,7 +135,21 @@ isa             : rv32i2p0_ma
 mmu             : sv32
 ```
 
-Une fois validé, nous pouvons flasher le nouveau firmware :
+## 6. Flasher le nouveau firmware :
+
+Vivado a généré un fichier .bit (utilisé pour charger le FPGA temporairement). Mais pour flasher la puce mémoire (SPI Flash) et rendre la configuration permanente, OpenOCD a besoin d'un fichier .bin.
+
+Il faut donc convertir le .bit en .bin manuellement via Vivado.
+Pour cela nous allons générer un script `gen_bin.tcl`: 
+```bash
+echo 'write_cfgmem -force -format bin -interface spi -size 16 -loadbit "up 0x0 ./build/nexys4ddr/gateware/nexys4ddr.bit" -file ./build/nexys4ddr/gateware/nexys4ddr.bin' > gen_bin.tcl
+```
+Puis on execute vivado : 
+```bash
+vivado -mode tcl -source gen_bin.tcl
+```
+
+Puis nous pouvons flasher : 
 ```bash
 python3 make.py --board=nexys4ddr --flash
 ```
