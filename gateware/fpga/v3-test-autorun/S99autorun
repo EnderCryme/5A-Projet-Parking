@@ -1,0 +1,28 @@
+#!/bin/sh
+# /etc/init.d/S99autorun
+# Script de pont : Monte la SD et lance startup.sh s'il existe.
+
+SD_MOUNT_POINT="/mnt/sd"
+SD_DEVICE="/dev/mmcblk0p1"
+USER_SCRIPT="startup.sh"
+
+echo "[Autorun] Checking for SD Card..."
+
+# 1. Créer le dossier de montage
+mkdir -p $SD_MOUNT_POINT
+
+# 2. Monter la partition FAT32 de la SD
+mount $SD_DEVICE $SD_MOUNT_POINT
+
+# 3. Vérifier et exécuter le script utilisateur
+if [ -f "$SD_MOUNT_POINT/$USER_SCRIPT" ]; then
+    echo "[Autorun] Found $USER_SCRIPT, executing..."
+    
+    # Force les droits d'exécution (utile si système de fichiers FAT)
+    chmod +x "$SD_MOUNT_POINT/$USER_SCRIPT"
+    
+    # Exécution du script
+    /bin/sh "$SD_MOUNT_POINT/$USER_SCRIPT"
+else
+    echo "[Autorun] No $USER_SCRIPT found on SD card."
+fi
