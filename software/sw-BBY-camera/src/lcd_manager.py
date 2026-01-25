@@ -1,0 +1,131 @@
+import time
+
+# ==========================================
+# GESTION DE LA SIMULATION (WINDOWS vs LINUX)
+# ==========================================
+try:
+    import spidev
+    IS_REAL_HARDWARE = True
+except ImportError:
+    IS_REAL_HARDWARE = False
+    # On crée une fausse classe SPI pour que Windows ne plante pas
+    class MockSpi:
+        def open(self, bus, device): pass
+        def max_speed_hz(self, speed): pass
+        def xfer2(self, data): pass
+        def close(self): pass
+    
+    # On simule le module spidev
+    spidev = type('obj', (object,), {'SpiDev': MockSpi})
+    
+# ==========================================
+# CONSTANTES & CONFIG
+# ==========================================
+REG_NOOP, REG_DIGIT0, REG_DECODEMODE = 0x00, 0x01, 0x09
+REG_INTENSITY, REG_SCANLIMIT, REG_SHUTDOWN, REG_DISPLAYTEST = 0x0A, 0x0B, 0x0C, 0x0F
+
+MIROIR_LETTRES = True
+INVERSER_ORDRE_MODULES = True
+VITESSE_DEFILEMENT = 0.04
+
+# --- POLICE D'ÉCRITURE CORRIGÉE ---
+# J'ai affiné le '.' et le ':' pour qu'ils soient propres.
+FONT = {
+    ' ': [0x00, 0x00, 0x00],
+    'A': [0x7E, 0x11, 0x11, 0x7E], 'B': [0x7F, 0x49, 0x49, 0x36],
+    'C': [0x3E, 0x41, 0x41, 0x22], 'D': [0x7F, 0x41, 0x41, 0x3E],
+    'E': [0x7F, 0x49, 0x49, 0x41], 'F': [0x7F, 0x09, 0x09, 0x01],
+    'G': [0x3E, 0x41, 0x49, 0x7A], 'H': [0x7F, 0x08, 0x08, 0x7F],
+    'I': [0x00, 0x41, 0x7F, 0x41], 'J': [0x20, 0x40, 0x41, 0x3F],
+    'K': [0x7F, 0x08, 0x14, 0x63], 'L': [0x7F, 0x40, 0x40, 0x40],
+    'M': [0x7F, 0x02, 0x0C, 0x02, 0x7F], 'N': [0x7F, 0x04, 0x08, 0x10, 0x7F],
+    'O': [0x3E, 0x41, 0x41, 0x3E], 'P': [0x7F, 0x09, 0x09, 0x06],
+    'Q': [0x3E, 0x41, 0x51, 0x21, 0x5E], 'R': [0x7F, 0x09, 0x19, 0x66],
+    'S': [0x46, 0x49, 0x49, 0x31], 'T': [0x01, 0x01, 0x7F, 0x01, 0x01],
+    'U': [0x3F, 0x40, 0x40, 0x3F], 'V': [0x1F, 0x20, 0x40, 0x20, 0x1F],
+    'W': [0x3F, 0x40, 0x38, 0x40, 0x3F], 'X': [0x63, 0x14, 0x08, 0x14, 0x63],
+    'Y': [0x07, 0x08, 0x70, 0x08, 0x07], 'Z': [0x61, 0x51, 0x49, 0x45, 0x43],
+    '0': [0x3E, 0x51, 0x49, 0x45, 0x3E], '1': [0x00, 0x42, 0x7F, 0x40, 0x00],
+    '2': [0x42, 0x61, 0x51, 0x49, 0x46], '3': [0x21, 0x41, 0x45, 0x45, 0x31],
+    '4': [0x18, 0x14, 0x12, 0x7F, 0x10], '5': [0x27, 0x45, 0x45, 0x45, 0x39],
+    '6': [0x3C, 0x4A, 0x49, 0x49, 0x30], '7': [0x01, 0x71, 0x09, 0x05, 0x03],
+    '8': [0x36, 0x49, 0x49, 0x49, 0x36], '9': [0x06, 0x49, 0x49, 0x29, 0x1E],
+    # CORRECTION ICI : On utilise une seule colonne de pixels au lieu de deux
+    '.': [0x00, 0x60, 0x00],       # Un seul point propre
+    ':': [0x00, 0x36, 0x00],       # Deux points verticaux fins (pas de barre)
+    '-': [0x08, 0x08, 0x08],
+    '°': [0x06, 0x09, 0x09, 0x06]
+}
+
+# ==========================================
+# CLASSE PRINCIPALE
+# ==========================================
+class LcdManager:
+    def __init__(self, cs_pin=0):
+        self.spi = spidev.SpiDev()
+        self.spi.open(0, cs_pin)
+        self.spi.max_speed_hz = 50000
+        self.width = 4 * 8 
+        
+        self.hard_reset()
+
+    def send_packet(self, register, data_list):
+        msg = []
+        iterator = range(4) if INVERSER_ORDRE_MODULES else range(3, -1, -1)
+        for i in iterator:
+            msg.append(register)
+            msg.append(data_list[i])
+        self.spi.xfer2(msg)
+
+    def hard_reset(self):
+        for reg, val in [(REG_SHUTDOWN, 0), (REG_DISPLAYTEST, 0), (REG_SCANLIMIT, 7), 
+                         (REG_DECODEMODE, 0), (REG_INTENSITY, 1), (REG_SHUTDOWN, 1)]:
+            self.send_packet(reg, [val]*4)
+        self.clear()
+
+    def display_buffer(self, column_data):
+        for row in range(8):
+            row_data = []
+            for m in range(4):
+                byte_val = 0
+                for col in range(8):
+                    idx = (m * 8) + col
+                    if idx < len(column_data):
+                        val = column_data[idx]
+                        if (val >> row) & 1:
+                            byte_val |= (1 << (7 - col)) if MIROIR_LETTRES else (1 << col)
+                row_data.append(byte_val)
+            self.send_packet(row + 1, row_data)
+
+    def clear(self):
+        self.display_buffer([0] * self.width)
+
+    def afficher_texte_fixe(self, text):
+        cols = []
+        for char in text.upper():
+            cols.extend(FONT.get(char, [0xFF]))
+            cols.append(0x00)
+        
+        offset = max(0, (self.width - len(cols)) // 2)
+        buffer = [0] * self.width
+        for i in range(min(len(cols), self.width)):
+            if offset + i < self.width:
+                buffer[offset + i] = cols[i]
+        self.display_buffer(buffer)
+
+    def scroll_text(self, text):
+        cols = []
+        for char in text.upper():
+            cols.extend(FONT.get(char, [0xFF, 0x00]))
+            cols.append(0x00)
+            
+        padding = [0] * self.width
+        full = padding + cols + padding
+        
+        for i in range(len(full) - self.width + 1):
+            self.display_buffer(full[i : i + self.width])
+            time.sleep(VITESSE_DEFILEMENT)
+            
+    def close(self):
+        self.clear()
+        self.spi.close()
