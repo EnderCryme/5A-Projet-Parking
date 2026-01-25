@@ -1,0 +1,127 @@
+import sqlite3
+from datetime import datetime
+import os
+
+class User:
+    def __init__(self, id_badge, id_plaque, nom, tel, adresse, email, code_pin):
+        self.id_badge = id_badge
+        self.id_plaque = id_plaque
+        self.nom = nom
+        self.tel = tel
+        self.adresse = adresse
+        self.email = email
+        self.code_pin = code_pin
+
+class DbManager:
+    def __init__(self, db_path="/home/vcauq/parking.db"):
+        self.db_path = db_path
+        self.init_db()
+
+    def init_db(self):
+        """Crée les tables si elles n'existent pas"""
+        with sqlite3.connect(self.db_path) as conn:
+            c = conn.cursor()
+            # Table Historique (Entrées/Sorties)
+            c.execute('''CREATE TABLE IF NOT EXISTS historique (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        plaque TEXT NOT NULL,
+                        entree TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        sortie TIMESTAMP,
+                        etat TEXT DEFAULT 'GARÉ')''')
+            
+            # Table Utilisateurs (Abonnés)
+            c.execute('''CREATE TABLE IF NOT EXISTS users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        id_badge TEXT,
+                        id_plaque TEXT UNIQUE,
+                        nom TEXT,
+                        tel TEXT,
+                        adresse TEXT,
+                        email TEXT,
+                        code_pin TEXT)''')
+            conn.commit()
+
+    def ajouter_user(self, user):
+        """Ajoute un utilisateur abonné"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                c = conn.cursor()
+                c.execute("INSERT OR REPLACE INTO users (id_badge, id_plaque, nom, tel, adresse, email, code_pin) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                          (user.id_badge, user.id_plaque, user.nom, user.tel, user.adresse, user.email, user.code_pin))
+                conn.commit()
+            print(f"[DB] Utilisateur {user.nom} ajouté.")
+            return True
+        except Exception as e:
+            print(f"[DB] Erreur ajout user: {e}")
+            return False
+
+    def get_user_by_plaque(self, plaque):
+        """Récupère les infos d'un abonné via sa plaque"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = sqlite3.Row
+                c = conn.cursor()
+                c.execute("SELECT * FROM users WHERE id_plaque = ?", (plaque,))
+                return c.fetchone()
+        except: return None
+
+    def process_entree(self, plaque):
+        """Gère l'arrivée d'une voiture"""
+        with sqlite3.connect(self.db_path) as conn:
+            c = conn.cursor()
+            # Vérifier si déjà garé
+            c.execute("SELECT id, entree FROM historique WHERE plaque = ? AND etat = 'GARÉ'", (plaque,))
+            data = c.fetchone()
+            
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            if data:
+                # Déjà garée (bug ou double détection)
+                heure_entree = str(data[1]).split(' ')[1] # Juste l'heure
+                return f"Deja la ({heure_entree})"
+            else:
+                # Nouvelle entrée
+                c.execute("INSERT INTO historique (plaque, etat, entree) VALUES (?, 'GARÉ', ?)", (plaque, now))
+                conn.commit()
+                
+                # Vérifie si c'est un abonné pour message personnalisé
+                user = self.get_user_by_plaque(plaque)
+                if user:
+                    return f"Salut {user['nom']} !"
+                else:
+                    return "Bienvenue !"
+
+    def process_sortie(self, plaque):
+        """Gère le départ d'une voiture"""
+        with sqlite3.connect(self.db_path) as conn:
+            c = conn.cursor()
+            # Chercher la voiture garée
+            c.execute("SELECT id, entree FROM historique WHERE plaque = ? AND etat = 'GARÉ'", (plaque,))
+            data = c.fetchone()
+            
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            if data:
+                # On note la sortie
+                c.execute("UPDATE historique SET sortie = ?, etat = 'PARTI' WHERE id = ?", (now, data[0]))
+                conn.commit()
+                
+                # Calcul du temps resté (Optionnel)
+                try:
+                    fmt = "%Y-%m-%d %H:%M:%S"
+                    # Gestion des formats de date parfois capricieux
+                    t_entree = str(data[1])
+                    if "." in t_entree: t_entree = t_entree.split(".")[0]
+                    
+                    d1 = datetime.strptime(t_entree, fmt)
+                    d2 = datetime.strptime(now, fmt)
+                    duration = d2 - d1
+                    minutes = int(duration.total_seconds() / 60)
+                    return f"Au revoir ({minutes}m)"
+                except:
+                    return "Au revoir !"
+            else:
+                return "Pas trouve (Sorti?)"
+
+    def close(self):
+        pass
