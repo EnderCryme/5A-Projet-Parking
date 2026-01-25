@@ -13,7 +13,7 @@ from flask import Flask, Response, jsonify, render_template
 # --- IMPORT MODULES MATERIELS ---
 from src.lcd_manager import LcdManager
 from src.sensor_manager import SensorManager
-import paho.mqtt.client as mqtt_client
+from src.mqtt_manager import MqttManager
 
 app = Flask(__name__)
 
@@ -21,20 +21,10 @@ app = Flask(__name__)
 CAM_ENTRY = 1
 CAM_EXIT = 3
 DB_PATH = "/home/vcauq/parking.db"
-SAMPLES_TO_TAKE = 3 
+# On garde 3 votes, mais on laisse plus de temps pour les faire
+SAMPLES_TO_TAKE = 3  
 LCD_CS = 0
 SENSOR_CS = 1
-RFID_TIMEOUT = 15.0 
-
-# --- VARIABLES GLOBALES ---
-last_rfid_unlock = 0 
-lcd = None
-sensor = None
-db = None 
-lcd_lock = threading.Lock()
-
-# LISTE POUR STOCKER LES LOGS MQTT (Pour le site web)
-mqtt_logs = []
 
 # ==========================================
 # 1. GESTION BASE DE DONNÉES
@@ -58,7 +48,7 @@ class ParkingDatabase:
                 conn.execute('''CREATE TABLE IF NOT EXISTS badges (
                         uid TEXT PRIMARY KEY, nom TEXT, date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
                 conn.commit()
-        except Exception as e: print(f"Err Init DB: {e}")
+        except: pass
 
     def gestion_entree_sortie(self, plaque, zone):
         res = "Erreur"
@@ -108,70 +98,20 @@ class ParkingDatabase:
                 return c.rowcount > 0
         except: return False
 
-# ==========================================
-# 2. MQTT MANAGER (Avec Logs pour le Web)
-# ==========================================
-class MqttHandler:
-    def __init__(self, db_manager):
-        self.client = mqtt_client.Client()
-        self.db = db_manager
-        self.client.on_connect = self.on_connect
-        self.client.on_message = self.on_message
-        try:
-            self.client.connect("localhost", 1883, 60)
-            self.client.loop_start()
-            print("✅ MQTT Connecté")
-        except: print("⚠️ Erreur MQTT")
+# --- INIT VARIABLES ---
+lcd = None; sensor = None; mqtt = None; db = None 
+lcd_lock = threading.Lock()
 
-    def on_connect(self, client, userdata, flags, rc):
-        client.subscribe("RFID/#")
-        client.subscribe("parking/#") # On écoute tout pour les logs
-
-    def on_message(self, client, userdata, msg):
-        global last_rfid_unlock, mqtt_logs
-        try:
-            topic = msg.topic
-            payload = msg.payload.decode("utf-8")
-            
-            # --- LOGGING WEB ---
-            t = datetime.now().strftime("%H:%M:%S")
-            mqtt_logs.insert(0, f"[{t}] {topic} : {payload}")
-            if len(mqtt_logs) > 30: mqtt_logs.pop() # On garde les 30 derniers
-            # -------------------
-
-            if topic == "RFID/ID":
-                print(f"[RFID] Scan: {payload}")
-                nom = self.db.verifier_badge(payload)
-                if nom:
-                    print(f"   => ACCES AUTORISÉ ({nom})")
-                    last_rfid_unlock = time.time()
-                    client.publish("parking/RFID/CMD", "UNLOCK_READY") 
-                else:
-                    client.publish("parking/RFID/CMD", "DENY")
-            
-            elif topic == "RFID/ADD":
-                if self.db.creer_badge_rapide(payload): client.publish("parking/RFID/CMD", "ADDED")
-                else: client.publish("parking/RFID/CMD", "ERROR_DB")
-            elif topic == "RFID/DEL":
-                if self.db.supprimer_par_badge(payload): client.publish("parking/RFID/CMD", "DELETED")
-                else: client.publish("parking/RFID/CMD", "ERROR_DB")
-
-        except Exception as e: print(f"Err MQTT: {e}")
-
-    def publish(self, topic, msg):
-        self.client.publish(f"parking/{topic}", msg)
-
-# --- INIT MATERIEL ---
 print("--- INIT MATERIEL ---")
 try:
     db = ParkingDatabase(DB_PATH)
     lcd = LcdManager(cs_pin=LCD_CS)
     sensor = SensorManager(cs_pin=SENSOR_CS)
-    mqtt = MqttHandler(db)
-    print("✅ Tout est prêt")
-except Exception as e: print(f"⚠️ Erreur Init: {e}")
+    mqtt = MqttManager(db_manager=db)
+    print("✅ OK")
+except Exception as e: print(f"⚠️ Erreur: {e}")
 
-# --- CAMERAS ---
+# --- CLASSE CAMERA THREADÉE (Capture en continu) ---
 class CameraThread:
     def __init__(self, src=0):
         self.src = src
@@ -192,16 +132,17 @@ class CameraThread:
                 with self.lock: self.frame = img
             else:
                 cap.release(); time.sleep(1); cap.open(self.src, cv2.CAP_V4L2)
-            time.sleep(0.005)
+            time.sleep(0.001) # Max FPS pour le web
 
     def read(self):
         with self.lock: return self.frame.copy() if self.frame is not None else None
 
+# Lancement Caméras
 cam_in_thread = CameraThread(CAM_ENTRY)
 cam_out_thread = CameraThread(CAM_EXIT)
 time.sleep(2)
 
-# --- CONFIG IA ---
+# --- XML & CONFIG IA ---
 base_dir = os.path.dirname(os.path.abspath(__file__))
 xml_file = 'haarcascade_russian_plate_number.xml'
 xml_path = os.path.join(base_dir, xml_file)
@@ -213,12 +154,12 @@ current_view = {"in": None, "out": None}
 last_activity = {"in": 0, "out": 0}
 vote_buffers = {"in": [], "out": []}
 display = {
-    "in":  {"plate": "...", "info": "Attente Badge...", "color": (150,150,150), "box": None},
+    "in":  {"plate": "...", "info": "Pret", "color": (150,150,150), "box": None},
     "out": {"plate": "...", "info": "Pret", "color": (150,150,150), "box": None}
 }
 config_tess = '--psm 7 -c tessedit_char_whitelist=ABCDEFGHJKLMNPQRSTVWXYZ0123456789-'
 
-# --- VISION UTILS ---
+# --- FONCTIONS VISION ---
 def fix_siv(text):
     clean = text.replace('-', '').replace(' ', '')
     if len(clean) != 7: return text
@@ -238,56 +179,55 @@ def enhance_plate(img):
         return cv2.threshold(clahe.apply(gray), 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
     except: return img
 
-# --- CŒUR DU SYSTÈME ---
 def process_image_snapshot(img, zone):
-    global current_view, last_activity, vote_buffers, last_rfid_unlock
+    """Traitement 'Snapshot' allégé"""
+    global current_view, last_activity, vote_buffers
     try:
-        rfid_valide = False
-        if zone == "in":
-            if (time.time() - last_rfid_unlock) < RFID_TIMEOUT:
-                rfid_valide = True
-                display[zone]["info"] = "Badge OK -> Scan..."
-            else:
-                display[zone]["info"] = "Badgez SVP !"
-        else:
-            rfid_valide = True 
-
+        # 1. CROP : On ne garde que les 60% du bas (On enlève le ciel)
         h, w = img.shape[:2]
-        crop_img = img[int(h*0.4):h, 0:w] 
-        gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
-        small_gray = cv2.resize(gray, (0,0), fx=0.5, fy=0.5)
-        plates = plate_cascade.detectMultiScale(small_gray, 1.1, 4, minSize=(30, 10))
+        crop_img = img[int(h*0.4):h, 0:w] # On coupe 40% du haut
         
-        found_roi = None; display_box = None
+        gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
+        
+        # 2. DETECTION RAPIDE
+        plates = plate_cascade.detectMultiScale(gray, 1.1, 4, minSize=(60, 20))
+        
+        found_roi = None
+        display_box = None
+        
         if len(plates) > 0:
-            (xs, ys, ws, hs) = max(plates, key=lambda r: r[2]*r[3])
-            x, y_crop, wb, hb = xs*2, ys*2, ws*2, hs*2
-            y = y_crop + int(h*0.4) 
+            # On remet les coordonnées à l'échelle de l'image complète
+            (x, y_crop, wb, hb) = max(plates, key=lambda r: r[2]*r[3])
+            y = y_crop + int(h*0.4) # On rajoute le décalage du crop
+            
             display_box = np.array([[x,y], [x+wb,y], [x+wb,y+hb], [x,y+hb]], dtype=np.int32)
-            roi = gray[y_crop:y_crop+hb, x:x+wb]
+            
+            # Extraction ROI
+            roi = gray[y_crop:y_crop+hb, x:x+wb] # On travaille sur le crop gris
             found_roi = roi
 
         if found_roi is not None:
             last_activity[zone] = time.time()
             display[zone]["box"] = display_box
             
-            if zone == "in" and not rfid_valide:
-                display[zone]["color"] = (0, 0, 255); return
-
+            # Lecture Tesseract
             final_img = enhance_plate(cv2.resize(found_roi, (300, 75)))
             txt = pytesseract.image_to_string(final_img, config=config_tess)
             cln = "".join([x for x in txt if x.isalnum()])
             corr = fix_siv(cln)
             
             if re.search(r"([A-Z]{2})-?([0-9]{3})-?([A-Z]{2})", corr):
+                # On formate proprement
                 clean_match = re.search(r"([A-Z]{2})-?([0-9]{3})-?([A-Z]{2})", corr)
                 candidate = f"{clean_match.group(1)}-{clean_match.group(2)}-{clean_match.group(3)}"
+                
                 vote_buffers[zone].append(candidate)
                 
                 if len(vote_buffers[zone]) < SAMPLES_TO_TAKE:
-                    display[zone]["info"] = f"Analyse {len(vote_buffers[zone])}/{SAMPLES_TO_TAKE}"
+                    display[zone]["info"] = f"Scan {len(vote_buffers[zone])}/{SAMPLES_TO_TAKE}"
                     display[zone]["color"] = (0, 255, 255)
                 else:
+                    # VICTOIRE
                     most_common = Counter(vote_buffers[zone]).most_common(1)[0][0]
                     vote_buffers[zone] = []
                     
@@ -295,32 +235,22 @@ def process_image_snapshot(img, zone):
                         info_db = db.gestion_entree_sortie(most_common, zone)
                         if mqtt: mqtt.publish("entree" if zone=="in" else "sortie", f"{most_common}|{info_db}")
                         
-                        if zone == "in":
-                            if mqtt: mqtt.publish("barrier_0/state", "OPEN")
-                            print(f"🚀 [ENTRÉE] Barrière Ouverte pour {most_common}")
-                        elif zone == "out":
-                            if mqtt: mqtt.publish("barrier_1/state", "OPEN")
-                            print(f"🚀 [SORTIE] Barrière Ouverte pour {most_common}")
-                            # Fermeture AUTO Sortie
-                            def fermer_barriere_sortie():
-                                time.sleep(5) 
-                                if mqtt: mqtt.publish("barrier_1/state", "CLOSE")
-                                print("🛑 [SORTIE] Barrière Fermée (Auto)")
-                            threading.Thread(target=fermer_barriere_sortie, daemon=True).start()
-
+                        # LCD Thread
                         threading.Thread(target=animation_lcd, args=(most_common, zone)).start()
+                        
                         display[zone]["plate"] = most_common
                         display[zone]["info"] = info_db
                         display[zone]["color"] = (0, 255, 0)
+                        print(f"[{zone}] WINNER: {most_common}")
                         current_view[zone] = most_common
 
+        # Timeout augmenté à 10s car on analyse moins souvent
         if time.time() - last_activity[zone] > 10.0:
             vote_buffers[zone] = []
             if current_view[zone]:
                 current_view[zone] = None
-                display[zone]["plate"] = "..."
-                display[zone]["info"] = "Attente Badge..." if zone=="in" else "Pret"
-                display[zone]["color"] = (150, 150, 150); display[zone]["box"] = None
+                display[zone]["plate"] = "..."; display[zone]["info"] = "Pret"; display[zone]["color"] = (150, 150, 150); display[zone]["box"] = None
+
     except Exception as e: pass
 
 def animation_lcd(plaque, zone):
@@ -330,25 +260,35 @@ def animation_lcd(plaque, zone):
             if zone=="out": lcd.scroll_text("AU REVOIR"); time.sleep(0.5)
             lcd.clear()
 
+# --- THREAD INTELLIGENCE ARTIFICIELLE (Frame Skip) ---
 def ia_loop():
     frame_counter = 0
     while True:
-        time.sleep(0.01) 
+        # On dort un peu (boucle de base)
+        time.sleep(0.05) 
         frame_counter += 1
-        if frame_counter % 3 != 0: continue
-        img_in = cam_in_thread.read(); img_out = cam_out_thread.read()
+        
+        # ON ANALYSE SEULEMENT 1 FOIS TOUTES LES 10 FRAMES (environ toutes les 0.5s)
+        # C'est CA qui va décharger ton CPU et rendre le tout fluide
+        if frame_counter % 10 != 0:
+            continue
+            
+        img_in = cam_in_thread.read()
+        img_out = cam_out_thread.read()
+        
         if img_in is not None: process_image_snapshot(img_in, "in")
         if img_out is not None: process_image_snapshot(img_out, "out")
 
 threading.Thread(target=ia_loop, daemon=True).start()
 
+# --- THREAD LCD ---
 def boucle_physique():
     while True:
         try:
             if lcd:
                 with lcd_lock: lcd.clear(); lcd.scroll_text("   BIENVENUE   ")
-            time.sleep(1); 
-            if lcd: 
+            time.sleep(1)
+            if lcd:
                 with lcd_lock: lcd.clear(); lcd.afficher_texte_fixe(datetime.now().strftime("%H:%M"))
             time.sleep(3) 
             if sensor and lcd:
@@ -379,7 +319,6 @@ def gen(zone):
         try:
             ret, buf = cv2.imencode('.jpg', frame_copy)
             if ret: yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + buf.tobytes() + b'\r\n')
-        except GeneratorExit: break
         except: pass
 
 @app.route('/')
@@ -400,9 +339,6 @@ def get_json():
             c.execute("SELECT * FROM historique ORDER BY id DESC LIMIT 100")
             return jsonify([dict(r) for r in c.fetchall()])
     except: return jsonify([])
-
-@app.route('/api/mqtt_logs')
-def get_mqtt_logs(): return jsonify(mqtt_logs)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, threaded=True, debug=False)

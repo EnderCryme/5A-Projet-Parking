@@ -13,7 +13,7 @@ from flask import Flask, Response, jsonify, render_template
 # --- IMPORT MODULES MATERIELS ---
 from src.lcd_manager import LcdManager
 from src.sensor_manager import SensorManager
-import paho.mqtt.client as mqtt_client
+import paho.mqtt.client as mqtt_client # On utilise la lib directement ici pour le customiser
 
 app = Flask(__name__)
 
@@ -21,20 +21,17 @@ app = Flask(__name__)
 CAM_ENTRY = 1
 CAM_EXIT = 3
 DB_PATH = "/home/vcauq/parking.db"
-SAMPLES_TO_TAKE = 3 
+SAMPLES_TO_TAKE = 3  
 LCD_CS = 0
 SENSOR_CS = 1
-RFID_TIMEOUT = 15.0 
+RFID_TIMEOUT = 15.0 # Temps max entre le badge et la détection plaque (secondes)
 
-# --- VARIABLES GLOBALES ---
-last_rfid_unlock = 0 
+# --- VARIABLES GLOBALES PARTAGÉES ---
+last_rfid_unlock = 0 # Timestamp du dernier badge valide
 lcd = None
 sensor = None
 db = None 
 lcd_lock = threading.Lock()
-
-# LISTE POUR STOCKER LES LOGS MQTT (Pour le site web)
-mqtt_logs = []
 
 # ==========================================
 # 1. GESTION BASE DE DONNÉES
@@ -44,7 +41,8 @@ class ParkingDatabase:
         self.db_path = db_path
         self.init_tables()
 
-    def connect(self): return sqlite3.connect(self.db_path, timeout=5)
+    def connect(self):
+        return sqlite3.connect(self.db_path, timeout=5)
 
     def init_tables(self):
         try:
@@ -61,12 +59,15 @@ class ParkingDatabase:
         except Exception as e: print(f"Err Init DB: {e}")
 
     def gestion_entree_sortie(self, plaque, zone):
+        # Pour la sortie, on laisse sortir tout le monde (ou on applique la meme regle ?)
+        # Ici j'applique la règle stricte UNIQUEMENT À L'ENTRÉE comme demandé.
         res = "Erreur"
         try:
             with self.connect() as conn:
                 c = conn.cursor()
                 now = datetime.now()
                 h_actu = now.strftime("%H:%M:%S")
+                
                 if zone == "in":
                     c.execute("SELECT id FROM historique WHERE plaque = ? AND etat = 'GARÉ'", (plaque,))
                     if c.fetchone(): res = "Deja la"
@@ -109,8 +110,9 @@ class ParkingDatabase:
         except: return False
 
 # ==========================================
-# 2. MQTT MANAGER (Avec Logs pour le Web)
+# 2. MQTT PERSONNALISÉ (Gestion Double Auth)
 # ==========================================
+# On redéfinit le MQTT ici pour qu'il puisse modifier la variable globale 'last_rfid_unlock'
 class MqttHandler:
     def __init__(self, db_manager):
         self.client = mqtt_client.Client()
@@ -125,36 +127,35 @@ class MqttHandler:
 
     def on_connect(self, client, userdata, flags, rc):
         client.subscribe("RFID/#")
-        client.subscribe("parking/#") # On écoute tout pour les logs
 
     def on_message(self, client, userdata, msg):
-        global last_rfid_unlock, mqtt_logs
+        global last_rfid_unlock
         try:
             topic = msg.topic
             payload = msg.payload.decode("utf-8")
             
-            # --- LOGGING WEB ---
-            t = datetime.now().strftime("%H:%M:%S")
-            mqtt_logs.insert(0, f"[{t}] {topic} : {payload}")
-            if len(mqtt_logs) > 30: mqtt_logs.pop() # On garde les 30 derniers
-            # -------------------
-
+            # 1. VERIFICATION BADGE
             if topic == "RFID/ID":
                 print(f"[RFID] Scan: {payload}")
                 nom = self.db.verifier_badge(payload)
                 if nom:
                     print(f"   => ACCES AUTORISÉ ({nom})")
-                    last_rfid_unlock = time.time()
-                    client.publish("parking/RFID/CMD", "UNLOCK_READY") 
+                    client.publish("RFID/CMD", "UNLOCK")
+                    
+                    # C'EST ICI LA CLÉ : On "ouvre" la fenêtre de tir pour la caméra
+                    last_rfid_unlock = time.time() 
+                    print("   => FENETRE CAMERA OUVERTE (15s)")
                 else:
-                    client.publish("parking/RFID/CMD", "DENY")
+                    print("   => ACCES REFUSÉ")
+                    client.publish("RFID/CMD", "DENY")
             
+            # 2. AJOUT / SUPPRESSION (Admin)
             elif topic == "RFID/ADD":
-                if self.db.creer_badge_rapide(payload): client.publish("parking/RFID/CMD", "ADDED")
-                else: client.publish("parking/RFID/CMD", "ERROR_DB")
+                if self.db.creer_badge_rapide(payload): client.publish("RFID/CMD", "ADDED")
+                else: client.publish("RFID/CMD", "ERROR_DB")
             elif topic == "RFID/DEL":
-                if self.db.supprimer_par_badge(payload): client.publish("parking/RFID/CMD", "DELETED")
-                else: client.publish("parking/RFID/CMD", "ERROR_DB")
+                if self.db.supprimer_par_badge(payload): client.publish("RFID/CMD", "DELETED")
+                else: client.publish("RFID/CMD", "ERROR_DB")
 
         except Exception as e: print(f"Err MQTT: {e}")
 
@@ -167,7 +168,7 @@ try:
     db = ParkingDatabase(DB_PATH)
     lcd = LcdManager(cs_pin=LCD_CS)
     sensor = SensorManager(cs_pin=SENSOR_CS)
-    mqtt = MqttHandler(db)
+    mqtt = MqttHandler(db) # Notre nouveau MQTT intelligent
     print("✅ Tout est prêt")
 except Exception as e: print(f"⚠️ Erreur Init: {e}")
 
@@ -238,10 +239,15 @@ def enhance_plate(img):
         return cv2.threshold(clahe.apply(gray), 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
     except: return img
 
-# --- CŒUR DU SYSTÈME ---
+# --- CŒUR DU SYSTÈME : ANALYSE ---
 def process_image_snapshot(img, zone):
     global current_view, last_activity, vote_buffers, last_rfid_unlock
     try:
+        # REGLE DE SÉCURITÉ :
+        # Si on est à l'entrée ("in") ET que personne n'a badgé depuis 15s
+        # ALORS on ne fait rien (ou juste de la détection visuelle sans enregistrement)
+        
+        # On détecte quand même pour afficher à l'écran, mais on bloquera l'enregistrement DB
         rfid_valide = False
         if zone == "in":
             if (time.time() - last_rfid_unlock) < RFID_TIMEOUT:
@@ -249,19 +255,21 @@ def process_image_snapshot(img, zone):
                 display[zone]["info"] = "Badge OK -> Scan..."
             else:
                 display[zone]["info"] = "Badgez SVP !"
+                # On pourrait arrêter ici pour économiser le CPU, mais c'est sympa de voir que ça détecte
         else:
-            rfid_valide = True 
+            rfid_valide = True # Pas besoin de badge pour sortir (ou à changer selon tes besoins)
 
+        # -- DEBUT DETECTION --
         h, w = img.shape[:2]
         crop_img = img[int(h*0.4):h, 0:w] 
         gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
-        small_gray = cv2.resize(gray, (0,0), fx=0.5, fy=0.5)
-        plates = plate_cascade.detectMultiScale(small_gray, 1.1, 4, minSize=(30, 10))
+        plates = plate_cascade.detectMultiScale(gray, 1.1, 4, minSize=(60, 20))
         
-        found_roi = None; display_box = None
+        found_roi = None
+        display_box = None
+        
         if len(plates) > 0:
-            (xs, ys, ws, hs) = max(plates, key=lambda r: r[2]*r[3])
-            x, y_crop, wb, hb = xs*2, ys*2, ws*2, hs*2
+            (x, y_crop, wb, hb) = max(plates, key=lambda r: r[2]*r[3])
             y = y_crop + int(h*0.4) 
             display_box = np.array([[x,y], [x+wb,y], [x+wb,y+hb], [x,y+hb]], dtype=np.int32)
             roi = gray[y_crop:y_crop+hb, x:x+wb]
@@ -271,9 +279,12 @@ def process_image_snapshot(img, zone):
             last_activity[zone] = time.time()
             display[zone]["box"] = display_box
             
+            # Si on n'a pas de badge valide à l'entrée, on s'arrête là (juste affichage visuel)
             if zone == "in" and not rfid_valide:
-                display[zone]["color"] = (0, 0, 255); return
+                display[zone]["color"] = (0, 0, 255) # Rouge = Pas de badge
+                return
 
+            # Si on a le badge, on lit la plaque
             final_img = enhance_plate(cv2.resize(found_roi, (300, 75)))
             txt = pytesseract.image_to_string(final_img, config=config_tess)
             cln = "".join([x for x in txt if x.isalnum()])
@@ -282,36 +293,28 @@ def process_image_snapshot(img, zone):
             if re.search(r"([A-Z]{2})-?([0-9]{3})-?([A-Z]{2})", corr):
                 clean_match = re.search(r"([A-Z]{2})-?([0-9]{3})-?([A-Z]{2})", corr)
                 candidate = f"{clean_match.group(1)}-{clean_match.group(2)}-{clean_match.group(3)}"
+                
                 vote_buffers[zone].append(candidate)
                 
                 if len(vote_buffers[zone]) < SAMPLES_TO_TAKE:
                     display[zone]["info"] = f"Analyse {len(vote_buffers[zone])}/{SAMPLES_TO_TAKE}"
                     display[zone]["color"] = (0, 255, 255)
                 else:
+                    # VICTOIRE - VALIDATION
                     most_common = Counter(vote_buffers[zone]).most_common(1)[0][0]
                     vote_buffers[zone] = []
                     
                     if most_common != current_view[zone]:
+                        # ENREGISTREMENT DB SEULEMENT ICI
                         info_db = db.gestion_entree_sortie(most_common, zone)
-                        if mqtt: mqtt.publish("entree" if zone=="in" else "sortie", f"{most_common}|{info_db}")
                         
-                        if zone == "in":
-                            if mqtt: mqtt.publish("barrier_0/state", "OPEN")
-                            print(f"🚀 [ENTRÉE] Barrière Ouverte pour {most_common}")
-                        elif zone == "out":
-                            if mqtt: mqtt.publish("barrier_1/state", "OPEN")
-                            print(f"🚀 [SORTIE] Barrière Ouverte pour {most_common}")
-                            # Fermeture AUTO Sortie
-                            def fermer_barriere_sortie():
-                                time.sleep(5) 
-                                if mqtt: mqtt.publish("barrier_1/state", "CLOSE")
-                                print("🛑 [SORTIE] Barrière Fermée (Auto)")
-                            threading.Thread(target=fermer_barriere_sortie, daemon=True).start()
-
+                        if mqtt: mqtt.publish("entree" if zone=="in" else "sortie", f"{most_common}|{info_db}")
                         threading.Thread(target=animation_lcd, args=(most_common, zone)).start()
+                        
                         display[zone]["plate"] = most_common
                         display[zone]["info"] = info_db
                         display[zone]["color"] = (0, 255, 0)
+                        print(f"[{zone}] WINNER: {most_common} (Badge OK)")
                         current_view[zone] = most_common
 
         if time.time() - last_activity[zone] > 10.0:
@@ -320,7 +323,8 @@ def process_image_snapshot(img, zone):
                 current_view[zone] = None
                 display[zone]["plate"] = "..."
                 display[zone]["info"] = "Attente Badge..." if zone=="in" else "Pret"
-                display[zone]["color"] = (150, 150, 150); display[zone]["box"] = None
+                display[zone]["color"] = (150, 150, 150)
+                display[zone]["box"] = None
     except Exception as e: pass
 
 def animation_lcd(plaque, zone):
@@ -333,10 +337,11 @@ def animation_lcd(plaque, zone):
 def ia_loop():
     frame_counter = 0
     while True:
-        time.sleep(0.01) 
+        time.sleep(0.05) 
         frame_counter += 1
-        if frame_counter % 3 != 0: continue
-        img_in = cam_in_thread.read(); img_out = cam_out_thread.read()
+        if frame_counter % 10 != 0: continue
+        img_in = cam_in_thread.read()
+        img_out = cam_out_thread.read()
         if img_in is not None: process_image_snapshot(img_in, "in")
         if img_out is not None: process_image_snapshot(img_out, "out")
 
@@ -347,8 +352,8 @@ def boucle_physique():
         try:
             if lcd:
                 with lcd_lock: lcd.clear(); lcd.scroll_text("   BIENVENUE   ")
-            time.sleep(1); 
-            if lcd: 
+            time.sleep(1)
+            if lcd:
                 with lcd_lock: lcd.clear(); lcd.afficher_texte_fixe(datetime.now().strftime("%H:%M"))
             time.sleep(3) 
             if sensor and lcd:
@@ -400,9 +405,6 @@ def get_json():
             c.execute("SELECT * FROM historique ORDER BY id DESC LIMIT 100")
             return jsonify([dict(r) for r in c.fetchall()])
     except: return jsonify([])
-
-@app.route('/api/mqtt_logs')
-def get_mqtt_logs(): return jsonify(mqtt_logs)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, threaded=True, debug=False)
