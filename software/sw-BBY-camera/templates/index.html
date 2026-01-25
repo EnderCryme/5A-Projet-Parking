@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Parking Intelligent</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #222; color: #eee; margin: 0; padding: 20px; }
+        h1, h2 { text-align: center; color: #fff; margin-bottom: 10px;}
+        
+        .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-bottom: 30px; }
+        .cam-box { border: 2px solid #444; background: #000; padding: 5px; border-radius: 5px; }
+        img { width: 480px; height: 360px; object-fit: cover; }
+        
+        .panel { background: #333; padding: 15px; border-radius: 8px; margin: 20px auto; width: 90%; max-width: 1000px; }
+        
+        /* --- MODIFICATION 1 : Scroll pour l'historique --- */
+        .table-scroll {
+            max-height: 300px; /* Hauteur max avant scroll */
+            overflow-y: auto;  /* Barre de défilement verticale */
+            border: 1px solid #555;
+        }
+
+        table { width: 100%; border-collapse: collapse; background: #444; }
+        th, td { padding: 10px; border: 1px solid #555; text-align: left; }
+        th { background: #555; position: sticky; top: 0; z-index: 2; box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4); }
+        tr:nth-child(even) { background: #3a3a3a; }
+
+        /* Console MQTT */
+        #mqtt-console {
+            background: #000; color: #0f0; 
+            border: 2px solid #555; 
+            height: 200px; 
+            overflow-y: scroll; 
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .log-line { border-bottom: 1px solid #111; padding: 2px 0; }
+    </style>
+</head>
+<body>
+    <h1>🚗 Surveillance Parking</h1>
+
+    <div class="container">
+        <div class="cam-box">
+            <h2>ENTRÉE</h2>
+            <img src="/vid_in" alt="Camera Entree">
+        </div>
+        <div class="cam-box">
+            <h2>SORTIE</h2>
+            <img src="/vid_out" alt="Camera Sortie">
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>📡 Console MQTT </h2>
+        <div id="mqtt-console">Chargement des logs...</div>
+    </div>
+
+    <div class="panel">
+        <h2>📋 Historique des Passages</h2>
+        <div class="table-scroll">
+            <table id="history-table">
+                <thead>
+                    <tr>
+                        <th>ID</th><th>Plaque</th><th>Entrée</th><th>Sortie</th><th>Etat</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Mettre à jour les logs MQTT
+        function updateMqtt() {
+            fetch('/api/mqtt_logs')
+                .then(r => r.json())
+                .then(data => {
+                    const consoleDiv = document.getElementById('mqtt-console');
+                    if (data.length > 0) {
+                        consoleDiv.innerHTML = data.map(l => `<div class="log-line">${l}</div>`).join('');
+                    }
+                }).catch(e => console.log(e));
+        }
+
+        // Mettre à jour l'historique
+        function updateHistory() {
+            fetch('/api/json')
+                .then(r => r.json())
+                .then(data => {
+                    const tbody = document.querySelector('#history-table tbody');
+                    tbody.innerHTML = data.map(row => {
+                        // --- MODIFICATION 2 : Changement des mots ---
+                        let etatAffiche = row.etat;
+                        if (row.etat === 'GARÉ') etatAffiche = '<span style="color:#4CAF50">ENTRE</span>'; // Vert
+                        if (row.etat === 'PARTI') etatAffiche = '<span style="color:#ff9800">SORTI</span>'; // Orange
+
+                        return `
+                        <tr>
+                            <td>${row.id}</td>
+                            <td><strong>${row.plaque}</strong></td>
+                            <td>${row.entree}</td>
+                            <td>${row.sortie || '-'}</td>
+                            <td>${etatAffiche}</td>
+                        </tr>
+                        `;
+                    }).join('');
+                }).catch(e => console.log(e));
+        }
+
+        // Rafraichissement
+        setInterval(updateMqtt, 1000);   // MQTT : toutes les 1s
+        setInterval(updateHistory, 3000); // Historique : toutes les 3s
+        updateMqtt(); updateHistory();
+    </script>
+</body>
+</html>

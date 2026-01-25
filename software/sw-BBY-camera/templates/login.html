@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Connexion Parking</title>
+    <style>
+        /* --- STYLES GENERAUX --- */
+        body {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background-color: #2d2d2d;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            width: 300px;
+            text-align: center;
+            border: 1px solid #444;
+            position: relative;
+        }
+
+        /* --- TYPOGRAPHIE HEADER --- */
+        h2 { 
+            margin-bottom: 5px; /* Réduit pour coller au sous-titre */
+            margin-top: 0;
+            color: #fff; 
+            letter-spacing: 1px;
+        }
+
+        /* Style pour "Projet de majeur..." */
+        .project-desc {
+            color: #4CAF50; /* Un vert léger pour rappeler le thème */
+            font-size: 0.95em;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        /* Style pour les noms (Crédits) */
+        .credits {
+            color: #777;     /* Gris plus sombre */
+            font-size: 0.8em; /* Plus petit */
+            font-style: italic; /* Italique */
+            margin-bottom: 25px; /* Espace avant le formulaire */
+            display: block;
+        }
+
+        /* --- INPUTS & FORM --- */
+        input {
+            width: 100%; padding: 10px; background-color: #404040;
+            border: 1px solid #555; color: white; border-radius: 4px;
+            box-sizing: border-box; font-size: 14px;
+        }
+        input:focus { outline: none; border-color: #4CAF50; }
+
+        .password-wrapper { position: relative; width: 100%; margin: 10px 0; }
+        .password-wrapper input { padding-right: 40px; margin: 0; }
+        
+        .toggle-password {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            cursor: pointer; width: 20px; height: 20px; fill: #888; transition: fill 0.3s;
+        }
+        .toggle-password:hover { fill: #ccc; }
+        .toggle-password.active { fill: #4CAF50; }
+
+        .forgot-pass {
+            display: block; text-align: right; font-size: 0.8em; color: #aaa;
+            text-decoration: none; margin-bottom: 15px; margin-top: 5px; cursor: pointer;
+        }
+        .forgot-pass:hover { color: #fff; text-decoration: underline; }
+
+        button {
+            width: 100%; padding: 10px; background-color: #4CAF50;
+            color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;
+        }
+        button:hover { background-color: #45a049; }
+
+        .flash-msg {
+            background-color: #ff5252; color: white; padding: 10px;
+            border-radius: 4px; margin-bottom: 15px; font-size: 0.9em;
+        }
+
+        /* --- POP-UP MODALE --- */
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+            width: 100%; height: 100%; background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background-color: #2d2d2d; margin: 15% auto; padding: 30px;
+            border: 1px solid #555; width: 300px; border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5); text-align: center;
+            position: relative; animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn { from {opacity: 0; transform: translateY(-20px);} to {opacity: 1; transform: translateY(0);} }
+        .close-modal {
+            color: #aaa; float: right; font-size: 28px; font-weight: bold;
+            position: absolute; top: 10px; right: 15px; cursor: pointer;
+        }
+        .close-modal:hover { color: #fff; }
+        .modal p { color: #ccc; font-size: 0.9em; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <h2>Parking Intelligent</h2>
+        
+        <div class="project-desc">Projet de majeur PSM 2025-2026</div>
+        <div class="credits">CAUQUIL - FALDA - CLERVILLE - ES SRIEJ</div>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-msg">{{ messages[0] }}</div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <input type="text" name="username" placeholder="Nom d'utilisateur" required autofocus style="margin-bottom: 10px;">
+            
+            <div class="password-wrapper">
+                <input type="password" id="password" name="password" placeholder="Mot de passe" required>
+                <svg class="toggle-password" id="togglePassword" viewBox="0 0 24 24">
+                    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                </svg>
+            </div>
+
+            <a href="#" id="forgotBtn" class="forgot-pass">Mot de passe oublié ?</a>
+
+            <button type="submit">Se connecter</button>
+        </form>
+    </div>
+
+    <div id="resetModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3 style="color:white; margin-top:0;">Réinitialisation</h3>
+            <p>Entrez votre email pour recevoir votre code PIN provisoire.</p>
+            <form action="#" method="POST" onsubmit="alert('Fonctionnalité backend en cours de développement.'); return false;">
+                <input type="email" name="email_recup" placeholder="votre@email.com" required>
+                <button type="submit" style="background-color: #ff9800;">Envoyer</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Oeil Password
+        const togglePassword = document.querySelector('#togglePassword');
+        const password = document.querySelector('#password');
+        togglePassword.addEventListener('click', function (e) {
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            this.classList.toggle('active');
+        });
+
+        // Pop-up Modal
+        const modal = document.getElementById("resetModal");
+        const btnLink = document.getElementById("forgotBtn");
+        const spanClose = document.getElementsByClassName("close-modal")[0];
+
+        btnLink.onclick = function(e) { e.preventDefault(); modal.style.display = "block"; }
+        spanClose.onclick = function() { modal.style.display = "none"; }
+        window.onclick = function(event) { if (event.target == modal) modal.style.display = "none"; }
+    </script>
+
+</body>
+</html>

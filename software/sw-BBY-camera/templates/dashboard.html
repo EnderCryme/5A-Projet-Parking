@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Tableau de Bord Parking</title>
+    <style>
+        /* --- STYLES GENERAUX --- */
+        body { font-family: 'Segoe UI', sans-serif; background: #222; color: #eee; margin: 0; padding: 20px; }
+        
+        /* HEADER */
+        .header { display: flex; justify-content: space-between; align-items: center; background: #333; padding: 15px 20px; border-radius: 8px; margin-bottom: 25px; border-bottom: 2px solid #4CAF50; }
+        .user-info span { color: #4CAF50; font-weight: bold; }
+        
+        .header-actions { display: flex; gap: 10px; }
+        .btn-logout { background: #d9534f; color: white; text-decoration: none; padding: 8px 15px; border-radius: 4px; transition: 0.3s; display: inline-block;}
+        .btn-logout:hover { background: #c9302c; }
+        .btn-settings { background: #555; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 1em; }
+        .btn-settings:hover { background: #777; }
+
+        /* IT PANEL STYLES */
+        .container-cams { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-bottom: 30px; }
+        .cam-box { border: 2px solid #444; background: #000; padding: 5px; border-radius: 5px; }
+        img.stream { width: 480px; height: 360px; object-fit: cover; }
+        .panel { background: #333; padding: 15px; border-radius: 8px; margin-bottom: 20px; position: relative; }
+        .panel h2 { margin-top: 0; border-bottom: 1px solid #555; padding-bottom: 10px; }
+        .table-scroll { max-height: 300px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; background: #444; }
+        th, td { padding: 8px; border: 1px solid #555; text-align: left; font-size: 0.9em; }
+        th { background: #222; position: sticky; top: 0; z-index: 1;}
+        tr:nth-child(even) { background: #3a3a3a; }
+        #mqtt-console { background: #000; color: #0f0; border: 1px solid #555; height: 150px; overflow-y: scroll; padding: 10px; font-family: monospace; font-size: 12px; }
+        
+        .dashboard-grid {
+            display: flex; gap: 20px; max-width: 1200px; margin: 0 auto;
+            flex-wrap: wrap; align-items: flex-start;
+        }
+        .vehicle-column {
+            flex: 1; min-width: 300px; background: #2a2a2a; border-radius: 15px; border: 1px solid #444;
+            display: flex; flex-direction: column; height: 500px;
+        }
+        .vehicle-header {
+            padding: 20px; border-bottom: 1px solid #444; background: #333;
+            border-radius: 15px 15px 0 0; text-align: center;
+        }
+        .vehicle-scroll-container { padding: 20px; overflow-y: auto; flex-grow: 1; }
+        .calendar-column { flex: 1; min-width: 350px; }
+
+        /* USER CARD */
+        .user-card { 
+            background: #333; padding: 15px; border-radius: 10px; 
+            margin-bottom: 15px; border: 1px solid #444; transition: transform 0.2s;
+        }
+        .user-card:hover { transform: translateX(5px); border-color: #4CAF50; }
+
+        /* CALENDRIER */
+        .calendar-wrapper {
+            background: #333; padding: 20px; border-radius: 15px; 
+            border: 1px solid #444; height: 100%; box-sizing: border-box;
+        }
+        .calendar-header { text-align: center; font-size: 1.2em; margin-bottom: 20px; color: #4CAF50; font-weight: bold; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .cal-day-name { text-align: center; color: #888; font-size: 0.8em; padding-bottom: 5px; }
+        .cal-day {
+            background: #222; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;
+            border-radius: 5px; position: relative; cursor: default; font-size: 0.9em; color: #555;
+        }
+        .cal-day.active { background: #2e7d32; color: white; cursor: pointer; border: 1px solid #4CAF50; }
+        .cal-day.today { border: 2px solid #fff; }
+        .cal-day .tooltip-text {
+            visibility: hidden; width: 180px; background-color: #000; color: #fff; text-align: left;
+            border-radius: 6px; padding: 10px; position: absolute; z-index: 10;
+            bottom: 125%; left: 50%; margin-left: -90px; opacity: 0; transition: opacity 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); border: 1px solid #4CAF50; font-size: 0.85em;
+        }
+        .cal-day:hover .tooltip-text { visibility: visible; opacity: 1; }
+
+        /* MODALES ET FORMULAIRES */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(3px); }
+        .modal-content { background-color: #2d2d2d; margin: 5% auto; padding: 25px; border: 1px solid #555; width: 450px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); position: relative; max-height: 90vh; overflow-y: auto;}
+        .close-modal { float: right; color: #aaa; font-size: 28px; cursor: pointer; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #ccc; }
+        .form-group input, .form-group select { width: 100%; padding: 8px; background: #404040; border: 1px solid #555; color: white; border-radius: 4px; box-sizing: border-box; }
+        .btn-submit { width: 100%; padding: 10px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;}
+        
+        /* ADMIN BOUTONS SPECIFIQUES */
+        .btn-add { position: absolute; right: 15px; top: 15px; background: #4CAF50; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .btn-edit { background: #2196F3; color: white; border: none; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-size: 0.8em; }
+        .btn-delete { width: 100%; padding: 10px; background: #d9534f; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        .confirm-mode { background: #ff0000 !important; font-weight: bold; animation: shake 0.3s; }
+        @keyframes shake { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -1px); } 100% { transform: translate(1px, 1px); } }
+
+        /* LISTES DYNAMIQUES (Plaques/Badges) */
+        .dynamic-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: center; }
+        .dynamic-row input { flex-grow: 1; margin: 0 !important; text-transform: uppercase; }
+        .btn-remove-item { background: #d9534f; color: white; border: none; width: 30px; height: 34px; border-radius: 4px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        .btn-add-item { background: #444; border: 1px dashed #777; color: #ccc; width: 100%; padding: 8px; cursor: pointer; border-radius: 4px; margin-top:5px; font-size: 0.9em; }
+        .btn-add-item:hover { background: #555; color: white; border-color: #aaa; }
+        
+        /* Oeil MDP */
+        .password-wrapper { position: relative; width: 100%; }
+        .password-wrapper input { margin: 0 !important; padding-right: 40px; }
+        .toggle-password { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; width: 20px; height: 20px; fill: #888; }
+        .toggle-password.active { fill: #4CAF50; }
+
+        /* --- PANNEAU DE CONTROLE --- */
+        .control-grid {
+            display: flex; gap: 20px; flex-wrap: wrap;
+        }
+        .control-box {
+            background: #222; padding: 15px; border-radius: 8px; border: 1px solid #444; flex: 1;
+            min-width: 250px;
+        }
+        .control-box h3 { margin-top: 0; color: #ddd; font-size: 1em; border-bottom: 1px solid #444; padding-bottom: 5px; }
+        
+        .btn-action-group { display: flex; gap: 10px; margin-top: 10px; }
+        
+        .btn-ctrl { flex: 1; padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
+        .btn-open { background-color: #2e7d32; } /* Vert */
+        .btn-open:hover { background-color: #1b5e20; }
+        .btn-close { background-color: #c62828; } /* Rouge */
+        .btn-close:hover { background-color: #b71c1c; }
+        .btn-send { background-color: #1976D2; } /* Bleu */
+        .btn-send:hover { background-color: #0D47A1; }
+
+        .lcd-input {
+            width: 70%; padding: 8px; background: #333; border: 1px solid #555; color: #0f0; 
+            font-family: monospace; border-radius: 4px;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="user-info">Bonjour <span>{{ user.nom }}</span> <small>({{ user.role }})</small></div>
+        
+        <div class="header-actions">
+            <button class="btn-settings" onclick="openProfileModal()">⚙️ Paramètres</button>
+            <a href="/logout" class="btn-logout">Déconnexion</a>
+        </div>
+    </div>
+
+    {% if user.role == 'IT' %}
+
+        <div class="container-cams">
+            <div class="cam-box"><h3>📷 ENTRÉE</h3><img class="stream" src="/vid_in"></div>
+            <div class="cam-box"><h3>📷 SORTIE</h3><img class="stream" src="/vid_out"></div>
+        </div>
+        
+        <div class="panel">
+            <h2>🎮 Contrôle Manuel Matériel</h2>
+            
+            <div class="control-grid">
+                
+                <div class="control-box">
+                    <h3>🚧 Barrière ENTRÉE</h3>
+                    <div class="btn-action-group">
+                        <button class="btn-ctrl btn-open" onclick="controlBarrier('in', 'OPEN')">OUVRIR ⬆️</button>
+                        <button class="btn-ctrl btn-close" onclick="controlBarrier('in', 'CLOSE')">FERMER ⬇️</button>
+                    </div>
+                </div>
+
+                <div class="control-box">
+                    <h3>🚧 Barrière SORTIE</h3>
+                    <div class="btn-action-group">
+                        <button class="btn-ctrl btn-open" onclick="controlBarrier('out', 'OPEN')">OUVRIR ⬆️</button>
+                        <button class="btn-ctrl btn-close" onclick="controlBarrier('out', 'CLOSE')">FERMER ⬇️</button>
+                    </div>
+                </div>
+
+                <div class="control-box">
+                    <h3>📟 Panneau LCD</h3>
+                    <div style="display:flex; gap:5px; margin-top:10px;">
+                        <input type="text" id="lcd-text" class="lcd-input" placeholder="Message..." maxlength="16">
+                        <button class="btn-ctrl btn-send" style="width:30%;" onclick="sendLcdMessage()">Envoyer</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>📡 Logs Système</h2>
+            <div id="mqtt-console">Chargement...</div>
+        </div>
+
+        <div class="panel">
+            <h2>📋 Historique Global</h2>
+            <div class="table-scroll">
+                <table id="history-table">
+                    <thead><tr><th>ID</th><th>Plaque</th><th>Entrée</th><th>Sortie</th><th>Etat</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>👥 Gestion Utilisateurs</h2>
+            <button class="btn-add" onclick="openAddModal()">+ Ajouter</button>
+            <div class="table-scroll">
+                <table id="users-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th><th>Nom</th><th>Rôle</th><th>Infos (Plaques/Badges)</th><th>Email</th><th>Tél</th><th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="addModal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal" onclick="closeModal('addModal')">&times;</span>
+                <h3>Ajouter un utilisateur</h3>
+                <form onsubmit="submitAddUser(event)">
+                    <div class="form-group"><label>Nom</label><input type="text" name="nom" required></div>
+                    
+                    <div class="form-group">
+                        <label>Mot de passe</label>
+                        <div class="password-wrapper">
+                            <input type="password" name="password" id="add-password-input" required>
+                            <svg class="toggle-password" id="toggle-add-pass" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group"><label>Rôle</label>
+                        <select name="role"><option value="USER">USER</option><option value="IT">IT</option></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Plaques</label>
+                        <div id="plaques-container-add"></div>
+                        <button type="button" class="btn-add-item" onclick="addDynamicField('plaques-container-add', 'plaque')">+ Ajouter Plaque</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Badges RFID</label>
+                        <div id="badges-container-add"></div>
+                        <button type="button" class="btn-add-item" onclick="addDynamicField('badges-container-add', 'badge')">+ Ajouter Badge</button>
+                    </div>
+
+                    <div class="form-group"><label>Téléphone</label><input type="text" name="tel"></div>
+                    <div class="form-group"><label>Email</label><input type="email" name="email"></div>
+                    
+                    <button type="submit" class="btn-submit">Enregistrer</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="editModal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal" onclick="closeModal('editModal')">&times;</span>
+                <h3>Modifier / Supprimer</h3>
+                
+                <form id="editForm" onsubmit="submitEditUser(event)">
+                    <input type="hidden" name="id" id="edit-id">
+                    
+                    <div class="form-group"><label>Nom</label><input type="text" name="nom" id="edit-nom" required></div>
+                    <div class="form-group"><label>Rôle</label>
+                        <select name="role" id="edit-role"><option value="USER">USER</option><option value="IT">IT</option></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Plaques enregistrées</label>
+                        <div id="plaques-container-edit"></div>
+                        <button type="button" class="btn-add-item" onclick="addDynamicField('plaques-container-edit', 'plaque')">+ Ajouter Plaque</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Badges RFID enregistrés</label>
+                        <div id="badges-container-edit"></div>
+                        <button type="button" class="btn-add-item" onclick="addDynamicField('badges-container-edit', 'badge')">+ Ajouter Badge</button>
+                    </div>
+
+                    <div class="form-group"><label>Téléphone</label><input type="text" name="tel" id="edit-tel"></div>
+                    <div class="form-group"><label>Email</label><input type="email" name="email" id="edit-email"></div>
+                    
+                    <button type="submit" class="btn-submit">Mettre à jour</button>
+                    <hr style="border: 0; border-top: 1px solid #555; margin: 20px 0;">
+                    <button type="button" id="btn-delete" class="btn-delete" onclick="handleDelete()">🗑️ Supprimer l'utilisateur</button>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            let deleteConfirmStep = 0;
+
+            // --- GESTION CHAMPS DYNAMIQUES ---
+            function addDynamicField(containerId, type, value = "") {
+                const container = document.getElementById(containerId);
+                const div = document.createElement('div');
+                div.className = 'dynamic-row';
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = type === 'plaque' ? 'plaque-input' : 'badge-input';
+                input.value = value;
+                input.placeholder = type === 'plaque' ? "AA-123-BB" : "UID Badge (ex: A1B2C3D4)";
+                input.style.textTransform = "uppercase";
+                
+                const btnDel = document.createElement('button');
+                btnDel.type = 'button';
+                btnDel.className = 'btn-remove-item';
+                btnDel.innerHTML = '&times;';
+                btnDel.onclick = function() { container.removeChild(div); };
+
+                div.appendChild(input);
+                div.appendChild(btnDel);
+                container.appendChild(div);
+            }
+
+            function collectData(formElement, className) {
+                const inputs = formElement.querySelectorAll('.' + className);
+                let results = [];
+                inputs.forEach(input => { if(input.value.trim() !== "") results.push(input.value.trim()); });
+                return results.join(',');
+            }
+
+            // --- GESTION MODALES ---
+            function openAddModal() { 
+                document.getElementById('addModal').style.display = 'block'; 
+                document.getElementById('plaques-container-add').innerHTML = '';
+                addDynamicField('plaques-container-add', 'plaque'); 
+                document.getElementById('badges-container-add').innerHTML = '';
+                addDynamicField('badges-container-add', 'badge'); 
+            }
+
+            function openEditModal(user) {
+                document.getElementById('editModal').style.display = 'block';
+                document.getElementById('edit-id').value = user.id;
+                document.getElementById('edit-nom').value = user.nom;
+                document.getElementById('edit-role').value = user.role;
+                document.getElementById('edit-email').value = user.email || '';
+                document.getElementById('edit-tel').value = user.tel || '';
+
+                // Plaques
+                const pCont = document.getElementById('plaques-container-edit');
+                pCont.innerHTML = '';
+                if (user.plaques_str && user.plaques_str.length > 0) {
+                    user.plaques_str.split(',').forEach(p => addDynamicField('plaques-container-edit', 'plaque', p.trim()));
+                } else { addDynamicField('plaques-container-edit', 'plaque'); }
+
+                // Badges
+                const bCont = document.getElementById('badges-container-edit');
+                bCont.innerHTML = '';
+                if (user.badges_str && user.badges_str.length > 0) {
+                    user.badges_str.split(',').forEach(b => addDynamicField('badges-container-edit', 'badge', b.trim()));
+                } else { addDynamicField('badges-container-edit', 'badge'); }
+                
+                resetDeleteBtn();
+            }
+
+            function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+            // --- SOUMISSION ---
+            function submitAddUser(e) {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData.entries());
+                
+                data.plaque = collectData(e.target, 'plaque-input');
+                data.badge = collectData(e.target, 'badge-input');
+
+                fetch('/api/add_user', { 
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) 
+                }).then(r=>r.json()).then(resp => {
+                    if(resp.success) { closeModal('addModal'); e.target.reset(); updateDashboard(); }
+                    else { alert("Erreur: " + resp.msg); }
+                });
+            }
+
+            function submitEditUser(e) {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData.entries());
+
+                data.plaque = collectData(e.target, 'plaque-input');
+                data.badge = collectData(e.target, 'badge-input');
+
+                fetch('/api/update_user', { 
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) 
+                }).then(r=>r.json()).then(resp => {
+                    if(resp.success) { closeModal('editModal'); updateDashboard(); }
+                    else { alert("Erreur mise à jour"); }
+                });
+            }
+
+            // --- UPDATE DASHBOARD ---
+            function updateDashboard() {
+                fetch('/api/mqtt_logs').then(r=>r.json()).then(d => {
+                    if(d.length>0) document.getElementById('mqtt-console').innerHTML = d.map(l=>`<div>${l}</div>`).join('');
+                });
+                fetch('/api/json').then(r=>r.json()).then(d => {
+                    document.querySelector('#history-table tbody').innerHTML = d.map(r => 
+                        `<tr><td>${r.id}</td><td><strong>${r.plaque}</strong></td><td>${r.entree}</td><td>${r.sortie||'-'}</td><td style="color:${r.etat==='GARÉ'?'#4CAF50':'#ff9800'}">${r.etat}</td></tr>`
+                    ).join('');
+                });
+                fetch('/api/users').then(r=>r.json()).then(d => {
+                    document.querySelector('#users-table tbody').innerHTML = d.map(u => `
+                        <tr>
+                            <td>${u.id}</td>
+                            <td><strong>${u.nom}</strong></td>
+                            <td><span style="color:${u.role==='IT'?'#2196F3':'#ccc'}">${u.role}</span></td>
+                            <td>
+                                <div style="font-size:0.9em; color:#fff;">🚗 ${u.plaques_str || '-'}</div>
+                                <div style="font-size:0.8em; color:#aaa; margin-top:2px;">🏷️ ${u.badges_str || '-'}</div>
+                            </td>
+                            <td>${u.email||'-'}</td>
+                            <td>${u.tel||'-'}</td>
+                            <td><button class="btn-edit" onclick='openEditModal(${JSON.stringify(u)})'>Modifier</button></td>
+                        </tr>
+                    `).join('');
+                });
+            }
+
+            function resetDeleteBtn() {
+                deleteConfirmStep = 0;
+                const btn = document.getElementById('btn-delete');
+                if(btn) { btn.innerText = "🗑️ Supprimer l'utilisateur"; btn.classList.remove('confirm-mode'); }
+            }
+
+            function handleDelete() {
+                const btn = document.getElementById('btn-delete');
+                if (deleteConfirmStep === 0) {
+                    deleteConfirmStep = 1;
+                    btn.innerText = "⚠️ C'est sûr ?";
+                    btn.classList.add('confirm-mode');
+                } else {
+                    const id = document.getElementById('edit-id').value;
+                    fetch('/api/delete_user', {
+                        method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: id})
+                    }).then(r=>r.json()).then(resp => {
+                        if(resp.success) { closeModal('editModal'); updateDashboard(); }
+                        else { alert("Erreur suppression"); }
+                    });
+                }
+            }
+
+            // Oeil MDP Add
+            const toggleAddParams = document.getElementById('toggle-add-pass');
+            const inputAddPass = document.getElementById('add-password-input');
+            if(toggleAddParams) {
+                toggleAddParams.addEventListener('click', function (e) {
+                    const type = inputAddPass.getAttribute('type') === 'password' ? 'text' : 'password';
+                    inputAddPass.setAttribute('type', type);
+                    this.classList.toggle('active');
+                });
+            }
+
+            function controlBarrier(gate, cmd) {
+                // gate = 'in' ou 'out', cmd = 'OPEN' ou 'CLOSE'
+                fetch('/api/control', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ type: 'barrier', gate: gate, cmd: cmd })
+                })
+                .then(r => r.json())
+                .then(d => {
+                    if(d.success) console.log("Commande barrière envoyée");
+                    else alert("Erreur commande");
+                });
+            }
+
+            function sendLcdMessage() {
+                const text = document.getElementById('lcd-text').value;
+                if(!text) return;
+
+                fetch('/api/control', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ type: 'lcd', text: text })
+                })
+                .then(r => r.json())
+                .then(d => {
+                    if(d.success) {
+                        alert("Message envoyé sur le LCD !");
+                        document.getElementById('lcd-text').value = ""; // Vider le champ
+                    }
+                });
+            }
+
+            setInterval(updateDashboard, 2000);
+            updateDashboard();
+        </script>
+
+    {% else %}
+
+        <div class="dashboard-grid">
+            
+            <div class="vehicle-column">
+                
+                <div class="vehicle-header">
+                    <h2 style="margin:0; color:#fff;">🚗 Vos Véhicules</h2>
+                </div>
+                
+                <div class="vehicle-scroll-container" style="flex: 2;"> {% if vehicles %}
+                        {% for v in vehicles %}
+                        <div class="user-card">
+                            <div style="font-size: 1.4em; font-weight: bold; color: white; margin-bottom:5px;">
+                                {{ v.numero }}
+                            </div>
+                            <div style="color: #bbb; font-size: 0.9em;">
+                                {% if v.etat == 'GARÉ' %}
+                                    <span style="color: #4CAF50;">
+                                        ⬇️ Entrée {{ v.date_affichee }} <br>
+                                        <strong>(garé depuis {{ v.duree_txt }})</strong>
+                                    </span>
+                                {% elif v.etat == 'PARTI' %}
+                                    <span style="color: #ff9800;">
+                                        ⬆️ Sortie (Dernier passage : {{ v.date_affichee }})
+                                    </span>
+                                {% else %}
+                                    Jamais vu dans le Parking
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="text-align:center; color:#888; margin-top:20px;">Aucun véhicule enregistré.</p>
+                    {% endif %}
+                </div>
+
+                <div class="vehicle-header" style="border-top: 1px solid #444; background: #2f2f2f;">
+                    <h2 style="margin:0; color:#fff; font-size: 1.1em;">🏷️ Vos Badges RFID</h2>
+                </div>
+
+                <div class="vehicle-scroll-container" style="flex: 1; background: #262626; border-radius: 0 0 15px 15px;">
+                    {% if badges %}
+                        {% for badge in badges %}
+                        <div class="user-card" style="padding: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <div style="font-weight: bold; color: #ddd; font-family: monospace; font-size: 1.1em;">
+                                {{ badge }}
+                            </div>
+                            <div style="font-size: 0.8em; background: #444; padding: 2px 8px; border-radius: 4px; color: #888;">
+                                ACTIF
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="text-align:center; color:#888; margin-top:10px;">Aucun badge associé.</p>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <div class="calendar-column">
+                <div class="calendar-wrapper">
+                    <div class="calendar-header" id="cal-month-name">Mois</div>
+                    
+                    <div class="calendar-grid" style="margin-bottom: 10px;">
+                        <div class="cal-day-name">Lu</div><div class="cal-day-name">Ma</div>
+                        <div class="cal-day-name">Me</div><div class="cal-day-name">Je</div>
+                        <div class="cal-day-name">Ve</div><div class="cal-day-name">Sa</div>
+                        <div class="cal-day-name">Di</div>
+                    </div>
+
+                    <div class="calendar-grid" id="cal-grid"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <script>
+            const historyData = {{ calendar_data|safe }}; 
+            
+            if (historyData) {
+                const date = new Date();
+                const currentYear = date.getFullYear();
+                const currentMonth = date.getMonth(); 
+                const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+                
+                const monthEl = document.getElementById('cal-month-name');
+                if(monthEl) monthEl.innerText = monthNames[currentMonth] + " " + currentYear;
+
+                const grid = document.getElementById('cal-grid');
+                if(grid) {
+                    let firstDay = new Date(currentYear, currentMonth, 1).getDay();
+                    firstDay = firstDay === 0 ? 6 : firstDay - 1; 
+                    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+                    for (let i = 0; i < firstDay; i++) { grid.appendChild(document.createElement('div')); }
+
+                    for (let d = 1; d <= daysInMonth; d++) {
+                        let dayCell = document.createElement('div');
+                        dayCell.className = 'cal-day';
+                        dayCell.innerText = d;
+
+                        let monthStr = (currentMonth + 1).toString().padStart(2, '0');
+                        let dayStr = d.toString().padStart(2, '0');
+                        let dateKey = `${currentYear}-${monthStr}-${dayStr}`;
+
+                        let todayStr = new Date().toISOString().split('T')[0];
+                        if(dateKey === todayStr) dayCell.classList.add('today');
+
+                        if (historyData[dateKey]) {
+                            dayCell.classList.add('active'); 
+                            let tooltip = document.createElement('span');
+                            tooltip.className = 'tooltip-text';
+                            tooltip.innerHTML = historyData[dateKey];
+                            dayCell.appendChild(tooltip);
+                        }
+                        grid.appendChild(dayCell);
+                    }
+                }
+            }
+        </script>
+    {% endif %}
+
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeProfileModal()">&times;</span>
+            <h3>Modifier mon profil</h3>
+            
+            <form onsubmit="submitProfile(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" value="{{ user.email }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Téléphone</label>
+                    <input type="text" name="tel" value="{{ user.tel }}">
+                </div>
+                
+                <hr style="border:0; border-top:1px solid #444; margin:20px 0;">
+                
+                <div class="form-group">
+                    <label>Nouveau mot de passe (Laisser vide pour ne pas changer)</label>
+                    <div class="password-wrapper">
+                        <input type="password" name="password" id="profile-pass">
+                        <svg class="toggle-password" onclick="togglePass('profile-pass', this)" viewBox="0 0 24 24">
+                            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">Enregistrer les modifications</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openProfileModal() { document.getElementById('profileModal').style.display = 'block'; }
+        function closeProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
+        
+        function togglePass(inputId, icon) {
+            const input = document.getElementById(inputId);
+            const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+            input.setAttribute('type', type);
+            icon.classList.toggle('active');
+        }
+
+        function submitProfile(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            fetch('/api/update_profile', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(resp => {
+                if(resp.success) {
+                    alert("Profil mis à jour !");
+                    closeProfileModal();
+                    location.reload(); 
+                } else {
+                    alert("Erreur lors de la mise à jour.");
+                }
+            });
+        }
+
+        window.onclick = function(e) {
+            if(e.target.classList.contains('modal')) e.target.style.display = 'none';
+        }
+    </script>
+
+</body>
+</html>
