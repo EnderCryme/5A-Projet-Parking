@@ -1,3 +1,10 @@
+# Rôle de la FPGA : 
+
+
+
+
+
+
 
 
 > **Note** : La compilation est cross-compiler : 

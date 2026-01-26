@@ -7,7 +7,7 @@
 #include <mosquitto.h>
 
 // --- CONFIGURATION GENERALE ---
-#define BROKER_IP    "192.168.1.100"
+#define BROKER_IP    "192.168.78.2"
 #define BROKER_PORT  1883
 #define BASE_TOPIC   "parking/barrier"
 #define MAX_BARRIERS 4
