@@ -2,7 +2,7 @@
 # Système de Gestion Centralisé (BeagleBone Node)
 
 ![Status](https://img.shields.io/badge/Status-Prototype-yellow)
-![Platform](https://img.shields.io/badge/Hardware-BeagleBone%20Black-black)
+![Platform](https://img.shields.io/badge/Hardware-BeagleY%20AI-green)
 ![Language](https://img.shields.io/badge/Language-Python%203.12-3776AB?logo=python&logoColor=white)
 ![Framework](https://img.shields.io/badge/Backend-Flask-000000?logo=flask&logoColor=white)
 ![Vision](https://img.shields.io/badge/Vision-OpenCV-5C3EE8?logo=opencv&logoColor=white)
