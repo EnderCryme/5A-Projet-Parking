@@ -1,0 +1,80 @@
+/*
+ * Overlay pour le Projet Parking (STM32F746G-DISCO)
+ * Mapping des GPIOs pour Capteurs, Relais et RFID
+ */
+
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+
+/ {
+	aliases {
+		/* Aliases utilisés dans main.c */
+		led-eclairage   = &led_puissance;
+		capteur-lumiere = &btn_lum;
+		capteur-voiture = &btn_prox;
+		backlight       = &lcd_bl;
+		barrier         = &led_green_board; /* Ajout pour visualiser l'état barrière */
+	};
+
+	/* --- Sorties (LEDs / Relais) --- */
+	leds_ext {
+		compatible = "gpio-leds";
+
+		/* Pilotage du Relais 12V (Sur GPIO I3) */
+		led_puissance: led_d7 {
+			gpios = <&gpioi 3 GPIO_ACTIVE_HIGH>;
+			label = "Relais Eclairage";
+		};
+
+		/* Rétroéclairage écran (Sur GPIO K3) */
+		lcd_bl: lcd_bl {
+			gpios = <&gpiok 3 GPIO_ACTIVE_HIGH>;
+			label = "LCD Backlight";
+		};
+        
+		/* LED Verte carte pour état Barrière (Sur GPIO I1) */
+		led_green_board: led_1 {
+			gpios = <&gpioi 1 GPIO_ACTIVE_HIGH>;
+			label = "Etat Barriere";
+		};
+	};
+
+	/* --- Entrées (Capteurs) --- */
+	buttons {
+		compatible = "gpio-keys";
+
+		/* Photo-résistance (Sur GPIO H6) */
+		btn_lum: sensor_d6 {
+			gpios = <&gpioh 6 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "Capteur Lumiere";
+			zephyr,code = <INPUT_KEY_0>;
+		};
+
+		/* Capteur Proximité (Sur GPIO I0) */
+		btn_prox: sensor_d5 {
+			gpios = <&gpioi 0 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>;
+			label = "Capteur Prox";
+			zephyr,code = <INPUT_KEY_1>;
+		};
+	};
+};
+
+/* --- Configuration du Bus SPI2 pour RFID RC522 --- */
+&spi2 {
+	status = "okay";
+	pinctrl-0 = <&spi2_sck_pi1 &spi2_miso_pb14 &spi2_mosi_pb15>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpioa 8 GPIO_ACTIVE_LOW>;
+
+	rc522: rc522@0 {
+		compatible = "zephyr,spi-device";
+		reg = <0>;
+		spi-max-frequency = <4000000>; /* 4 MHz */
+		label = "RC522";
+	};
+};
+
+/* Activation des ports GPIO nécessaires */
+&gpioa { status = "okay"; };
+&gpioh { status = "okay"; };
+&gpioi { status = "okay"; };
+&gpiok { status = "okay"; };

@@ -1,0 +1,539 @@
+```c
+/**
+ * @file main.c
+ * @brief Firmware de gestion d'accès Parking (STM32 Node)
+ * @author Tete de Clerville
+ * @version 1.0.4 (Integration Camera + RFID)
+ * @date 2026-01-25
+ * * @details Ce module gère l'interface LVGL, la lecture RFID via SPI,
+ * les capteurs GPIO et la communication MQTT sur Zephyr OS.
+ * Inclut la logique de sécurité Anti-Tailgating.
+ */
+
+/* =========================================================================
+ * INCLUDES
+ * ========================================================================= */
+#include <zephyr/device.h>
+#include <zephyr/devicetree.h>
+#include <zephyr/drivers/display.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/drivers/spi.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/sys/util.h>
+#include <zephyr/net/net_ip.h>
+#include <zephyr/net/socket.h>
+#include <zephyr/net/mqtt.h>
+#include <zephyr/random/random.h>
+#include <lvgl.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdbool.h>
+#include <errno.h>
+
+LOG_MODULE_REGISTER(app, LOG_LEVEL_INF);
+
+/* =========================================================================
+ * MACROS & CONFIGURATION
+ * ========================================================================= */
+
+/* --- Compatibilité LVGL (Version Agnostic) --- */
+#if defined(LVGL_VERSION_MAJOR) && (LVGL_VERSION_MAJOR >= 8)
+  #define LVGL_SCREEN_ACT()       lv_scr_act()
+  #define LVGL_DISP_DEFAULT()     lv_disp_get_default()
+  #define LVGL_TIMER_HANDLER()    lv_timer_handler()
+  #define LVGL_PASS_BULLET(ta)    lv_textarea_set_password_bullet((ta), "*")
+  #define BTNMX_CREATE            lv_btnmatrix_create
+  #define BTNMX_SET_MAP           lv_btnmatrix_set_map
+  #define BTNMX_GET_SELECTED(o)   lv_btnmatrix_get_selected_btn(o)
+  #define BTNMX_GET_TEXT(o,i)     lv_btnmatrix_get_btn_text((o),(i))
+  #define BTNMX_BTN_NONE          LV_BTNMATRIX_BTN_NONE
+  #define OBJ_HIDE(o)             lv_obj_add_flag((o), LV_OBJ_FLAG_HIDDEN)
+  #define OBJ_SHOW(o)             lv_obj_clear_flag((o), LV_OBJ_FLAG_HIDDEN)
+#else
+  #define LVGL_SCREEN_ACT         lv_scr_act
+  #define LVGL_DISP_DEFAULT       lv_disp_get_default
+  #define LVGL_TIMER_HANDLER      lv_task_handler
+  #define LVGL_PASS_BULLET(ta)    lv_textarea_set_password_bullet((ta), '*')
+  #define BTNMX_CREATE            lv_btnmatrix_create
+  #define BTNMX_SET_MAP           lv_btnmatrix_set_map
+  #define BTNMX_GET_SELECTED(o)   lv_btnmatrix_get_active_btn(o)
+  #define BTNMX_GET_TEXT(o,i)     lv_btnmatrix_get_btn_text((o),(i))
+  #define BTNMX_BTN_NONE          LV_BTNMATRIX_BTN_NONE
+  #define OBJ_HIDE(o)             lv_obj_set_hidden((o), true)
+  #define OBJ_SHOW(o)             lv_obj_set_hidden((o), false)
+#endif
+
+/* --- Paramètres Application --- */
+#define IT_SECRET_CODE      "2580"
+#define MAX_CODE_LEN        4
+#define DELAY_BEFORE_CLOSE  5000 
+#define DELAY_BEFORE_OFF    2000
+#define ADMIN_BADGE_UID     "AA63F605"
+
+/* --- Configuration MQTT --- */
+#define MQTT_SERVER_ADDR    "192.168.78.2"
+#define MQTT_SERVER_PORT    1883
+#define MQTT_TOPIC_BADGE    "RFID/ID"
+#define MQTT_TOPIC_CMD      "RFID/CMD"
+#define MQTT_TOPIC_BEAGLEY  "parking/barrier_0/state" /* Topic Unifié */
+#define MQTT_TOPIC_ADD      "RFID/ADD"
+#define MQTT_TOPIC_DEL      "RFID/DEL"
+#define MQTT_TOPIC_PRES     "RFID/PRESENCE"
+#define MQTT_TOPIC_BARRIER_IN "parking/barrier_0/state" 
+
+/* --- Configuration SPI / RFID --- */
+#define SPI_BUS      DT_NODELABEL(spi2)
+#define GPIOA_NODE   DT_NODELABEL(gpioa)
+#define CS_PIN       8  
+#define RST_PIN      15 
+
+/* =========================================================================
+ * GLOBALS & HANDLERS
+ * ========================================================================= */
+
+/* Périphériques Hardware */
+static const struct device *disp_dev; 
+static struct gpio_dt_spec barrier_gpio = GPIO_DT_SPEC_GET_OR(DT_ALIAS(barrier), gpios, (struct gpio_dt_spec){0});
+static const struct gpio_dt_spec capteur_lum = GPIO_DT_SPEC_GET(DT_ALIAS(capteur_lumiere), gpios);
+static const struct gpio_dt_spec relais_led = GPIO_DT_SPEC_GET(DT_ALIAS(led_eclairage), gpios);
+static const struct gpio_dt_spec capteur_voiture = GPIO_DT_SPEC_GET(DT_ALIAS(capteur_voiture), gpios);
+static const struct gpio_dt_spec backlight_gpio = GPIO_DT_SPEC_GET(DT_ALIAS(backlight), gpios);
+
+/* SPI Hardware */
+static const struct device *spi_dev;
+static const struct device *gpioa_dev;
+static const struct spi_config spi_cfg = { 
+    .frequency = 4000000, 
+    .operation = SPI_WORD_SET(8) | SPI_TRANSFER_MSB, 
+    .slave = 0 
+};
+
+/* Contextes Réseau */
+static uint8_t mqtt_rx_buf[256];
+static uint8_t mqtt_tx_buf[256];
+static struct mqtt_client mqtt_client_ctx;
+static struct sockaddr_storage mqtt_broker;
+static bool mqtt_connected = false;
+
+/* Flags d'état (Volatile pour accès inter-thread/ISR) */
+static volatile bool cmd_unlock = false;
+static volatile bool cmd_deny = false;
+static volatile bool cmd_added = false;
+static volatile bool cmd_deleted = false;
+static volatile bool cmd_error_db = false;
+static volatile bool cmd_it_debug_on = false;
+static volatile bool cmd_it_debug_off = false;
+static volatile bool cmd_badge_valid_only = false; 
+
+/* Objets UI LVGL */
+static lv_obj_t *page_home, *page_debug;
+static lv_obj_t *status_home, *status_debug;
+static lv_obj_t *barrier_home, *barrier_debug;
+static lv_obj_t *ta_code, *btnm_keypad, *log_ta;
+
+/* Variables d'état Application */
+static lv_timer_t *relock_timer  = NULL; 
+static bool debug_action_mode    = false; 
+static int  admin_mode_state     = 0;
+static int  ui_lock_timer        = 0; 
+static int  last_car_state       = -1;
+static bool screen_is_active     = false;
+static bool barrier_unlocked     = false;
+static bool mode_it_actif        = false; 
+
+/* Buffers RFID */
+static volatile bool rfid_badge_ok_request = false;
+static volatile bool rfid_error_request    = false;
+static char last_rfid_log[160];
+static char last_badge_uid[16] = {0};
+static char log_last1[160] = {0};
+static char log_last2[160] = {0};
+
+/* =========================================================================
+ * HELPERS & LOGGING
+ * ========================================================================= */
+
+/**
+ * @brief Ajoute une ligne au log affiché sur l'écran tactile (FIFO 2 lignes).
+ */
+static void log_push(const char *line) {
+    strncpy(log_last2, log_last1, sizeof(log_last2)-1);
+    strncpy(log_last1, line, sizeof(log_last1)-1);
+    if (log_ta) {
+        char buf[340];
+        snprintf(buf, sizeof(buf), "%s\n%s", log_last2, log_last1);
+        lv_textarea_set_text(log_ta, buf);
+    }
+}
+
+static void ui_set_status_all(const char *txt, lv_color_t color) {
+    if (status_home) { 
+        lv_label_set_text(status_home, txt); 
+        lv_obj_set_style_text_color(status_home, color, 0); 
+    }
+    if (status_debug && !debug_action_mode) { 
+        lv_label_set_text(status_debug, txt); 
+        lv_obj_set_style_text_color(status_debug, color, 0); 
+    }
+}
+
+static void ui_set_barrier_label(void) {
+    const char *txt = barrier_unlocked ? "Barriere : DEVERROUILLEE" : "Barriere : VERROUILLEE";
+    lv_color_t col = barrier_unlocked ? lv_palette_main(LV_PALETTE_GREEN) : lv_palette_main(LV_PALETTE_RED);
+    if (barrier_home) { lv_label_set_text(barrier_home, txt); lv_obj_set_style_text_color(barrier_home, col, 0); }
+    if (barrier_debug) { lv_label_set_text(barrier_debug, txt); lv_obj_set_style_text_color(barrier_debug, col, 0); }
+}
+
+static int mqtt_publish_generic(const char *topic, const char *payload); // Proto
+
+/**
+ * @brief Pilote le GPIO de la barrière et met à jour l'UI.
+ */
+static void barrier_set(bool unlocked) {
+    barrier_unlocked = unlocked;
+    if (device_is_ready(barrier_gpio.port)) gpio_pin_set_dt(&barrier_gpio, unlocked ? 1 : 0);
+    ui_set_barrier_label();
+}
+
+static void relock_cb(lv_timer_t *t) {
+    ARG_UNUSED(t);
+    barrier_set(false);
+    mqtt_publish_generic(MQTT_TOPIC_BEAGLEY, "CLOSE");
+    if (debug_action_mode) log_push("[AUTO] Verrouillage");
+    else ui_set_status_all("Verrouillee auto", lv_palette_main(LV_PALETTE_GREY));
+    if (relock_timer) { lv_timer_del(relock_timer); relock_timer = NULL; }
+}
+
+/* =========================================================================
+ * UI & INTERFACE (LVGL)
+ * ========================================================================= */
+
+static void show_home(void) {
+    OBJ_SHOW(page_home); OBJ_HIDE(page_debug); admin_mode_state = 0;
+    if (status_home) {
+        lv_label_set_text(status_home, "Presentez votre carte");
+        lv_obj_set_style_text_color(status_home, lv_palette_main(LV_PALETTE_BLUE), 0);
+    }
+}
+
+static void show_debug(bool pin_mode) {
+    OBJ_HIDE(page_home); OBJ_SHOW(page_debug); debug_action_mode = !pin_mode; admin_mode_state = 0;
+    if (pin_mode) {
+        OBJ_SHOW(ta_code); lv_textarea_set_text(ta_code, ""); debug_action_mode = false; 
+        ui_set_status_all("Mode IT - Entrez le code", lv_palette_main(LV_PALETTE_BLUE));
+    } else {
+        OBJ_HIDE(ta_code);
+        lv_label_set_text(status_debug, "IT: [1]Ouvrir [2]Fermer\n[4]Ajout [5]Suppr [#]Quitter");
+        lv_obj_set_style_text_color(status_debug, lv_palette_main(LV_PALETTE_BLUE), 0);
+    }
+}
+
+static void keypad_event_cb(lv_event_t *e) {
+    lv_obj_t *m = lv_event_get_target(e);
+    const char *txt = BTNMX_GET_TEXT(m, BTNMX_GET_SELECTED(m));
+    if (!txt) return;
+
+    if (debug_action_mode) {
+        if (strcmp(txt, "1") == 0) { barrier_set(true); mqtt_publish_generic(MQTT_TOPIC_BEAGLEY, "OPEN"); log_push("Ouv Manuelle"); } 
+        else if (strcmp(txt, "2") == 0) { barrier_set(false); mqtt_publish_generic(MQTT_TOPIC_BEAGLEY, "CLOSE"); log_push("Ferm Manuelle"); } 
+        else if (strcmp(txt, "4") == 0) { admin_mode_state = 1; lv_label_set_text(status_debug, "MODE AJOUT..."); lv_obj_set_style_text_color(status_debug, lv_palette_main(LV_PALETTE_ORANGE), 0); }
+        else if (strcmp(txt, "5") == 0) { admin_mode_state = 2; lv_label_set_text(status_debug, "MODE SUPPR..."); lv_obj_set_style_text_color(status_debug, lv_palette_main(LV_PALETTE_RED), 0); }
+        else if (strcmp(txt, "#") == 0) { 
+            if(admin_mode_state != 0) { show_debug(false); } 
+            else { 
+                log_push("Deconnexion IT"); debug_action_mode = false; mode_it_actif = false; 
+                show_home(); 
+            }
+        }
+    } else {
+        if (strcmp(txt, "DEL") == 0) lv_textarea_delete_char(ta_code);
+        else if (strcmp(txt, "CLR") == 0) lv_textarea_set_text(ta_code, "");
+        else if (strcmp(txt, "OK") == 0) {
+            if (strcmp(lv_textarea_get_text(ta_code), IT_SECRET_CODE) == 0) show_debug(false);
+            else { ui_set_status_all("Code faux", lv_palette_main(LV_PALETTE_RED)); lv_textarea_set_text(ta_code, ""); }
+        } else if (strlen(txt)==1) lv_textarea_add_text(ta_code, txt);
+    }
+}
+
+static void build_ui(void) {
+    lv_obj_t *scr = LVGL_SCREEN_ACT();
+    page_home = lv_obj_create(scr); lv_obj_set_size(page_home, 480, 272);
+    status_home = lv_label_create(page_home); lv_label_set_text(status_home, "Demarrage..."); lv_obj_align(status_home, LV_ALIGN_TOP_MID, 0, 8);
+    barrier_home = lv_label_create(page_home); lv_obj_align(barrier_home, LV_ALIGN_BOTTOM_MID, 0, -4);
+
+    page_debug = lv_obj_create(scr); lv_obj_set_size(page_debug, 480, 272);
+    status_debug = lv_label_create(page_debug); lv_label_set_text(status_debug, "Code IT"); lv_obj_align(status_debug, LV_ALIGN_TOP_MID, 0, 5);
+    ta_code = lv_textarea_create(page_debug); lv_textarea_set_password_mode(ta_code, true); lv_textarea_set_one_line(ta_code, true); lv_obj_set_width(ta_code, 120); lv_obj_align_to(ta_code, status_debug, LV_ALIGN_OUT_BOTTOM_MID, 0, 5);
+    
+    static const char *map[] = {"1","2","3","DEL","\n","4","5","6","CLR","\n","7","8","9","OK","\n","*","0","#","SOS",""};
+    btnm_keypad = BTNMX_CREATE(page_debug); BTNMX_SET_MAP(btnm_keypad, map); lv_obj_set_size(btnm_keypad, 220, 150); lv_obj_add_event_cb(btnm_keypad, keypad_event_cb, LV_EVENT_VALUE_CHANGED, NULL); lv_obj_align_to(btnm_keypad, ta_code, LV_ALIGN_OUT_BOTTOM_MID, 0, 5);
+    log_ta = lv_textarea_create(page_debug); lv_obj_set_size(log_ta, 440, 50); lv_obj_align_to(log_ta, btnm_keypad, LV_ALIGN_OUT_BOTTOM_MID, 0, 5);
+    barrier_debug = lv_label_create(page_debug); lv_obj_align_to(barrier_debug, log_ta, LV_ALIGN_OUT_BOTTOM_MID, 0, 2);
+    barrier_set(false); show_home();
+}
+
+/* =========================================================================
+ * RESEAU & MQTT
+ * ========================================================================= */
+
+static int mqtt_subscribe_cmd(struct mqtt_client *client) {
+    struct mqtt_topic topics[2];
+    /* Topic commandes RFID */
+    topics[0].topic.utf8 = (uint8_t *)MQTT_TOPIC_CMD; 
+    topics[0].topic.size = strlen(MQTT_TOPIC_CMD); 
+    topics[0].qos = MQTT_QOS_0_AT_MOST_ONCE;
+    /* Topic commandes Caméra */
+    topics[1].topic.utf8 = (uint8_t *)MQTT_TOPIC_BARRIER_IN; 
+    topics[1].topic.size = strlen(MQTT_TOPIC_BARRIER_IN);
+    topics[1].qos = MQTT_QOS_0_AT_MOST_ONCE;
+
+    struct mqtt_subscription_list sub_list = {.list = topics, .list_count = 2, .message_id = sys_rand16_get()};
+    return mqtt_subscribe(client, &sub_list);
+}
+
+static void mqtt_evt_handler(struct mqtt_client *const client, const struct mqtt_evt *evt) {
+    if (evt->type == MQTT_EVT_CONNACK && evt->result==0) { 
+        mqtt_connected=true; mqtt_subscribe_cmd(client); 
+    }
+    else if (evt->type == MQTT_EVT_DISCONNECT) { 
+        mqtt_connected = false; 
+    }
+    else if (evt->type == MQTT_EVT_PUBLISH) {
+        const struct mqtt_publish_param *p = &evt->param.publish;
+        char cmd_buf[32]; uint32_t len = MIN(p->message.payload.len, sizeof(cmd_buf)-1);
+        mqtt_read_publish_payload_blocking(client, cmd_buf, len); cmd_buf[len] = '\0';
+        
+        char topic_buf[64];
+        uint32_t topic_len = MIN(p->message.topic.topic.size, sizeof(topic_buf)-1);
+        memcpy(topic_buf, p->message.topic.topic.utf8, topic_len);
+        topic_buf[topic_len] = '\0';
+
+        /* --- Dispatch des Commandes --- */
+        if (strcmp(topic_buf, MQTT_TOPIC_BARRIER_IN) == 0 && strcmp(cmd_buf, "OPEN") == 0) {
+            if (!barrier_unlocked) cmd_unlock = true;
+        }
+        else if (strcmp(cmd_buf, "UNLOCK_READY") == 0) cmd_badge_valid_only = true;
+        else if (strcmp(cmd_buf, "UNLOCK") == 0) cmd_unlock = true;
+        else if (strcmp(cmd_buf, "DENY") == 0) cmd_deny = true;
+        else if (strcmp(cmd_buf, "ADDED") == 0) cmd_added = true;
+        else if (strcmp(cmd_buf, "DELETED") == 0) cmd_deleted = true;
+        else if (strcmp(cmd_buf, "ERROR_DB") == 0) cmd_error_db = true;
+        else if (strcmp(cmd_buf, "IT_DEBUG_ON") == 0) cmd_it_debug_on = true;
+        else if (strcmp(cmd_buf, "IT_DEBUG_OFF") == 0) cmd_it_debug_off = true;
+    }
+}
+
+static void mqtt_service(void) {
+    if (!mqtt_connected) {
+        struct sockaddr_in *broker4 = (struct sockaddr_in *)&mqtt_broker;
+        broker4->sin_family = AF_INET; broker4->sin_port = htons(MQTT_SERVER_PORT);
+        net_addr_pton(AF_INET, MQTT_SERVER_ADDR, &broker4->sin_addr);
+        mqtt_client_init(&mqtt_client_ctx); mqtt_client_ctx.broker = &mqtt_broker; mqtt_client_ctx.evt_cb = mqtt_evt_handler;
+        mqtt_client_ctx.client_id.utf8 = (uint8_t *)"stm32f7"; mqtt_client_ctx.client_id.size = 7;
+        mqtt_client_ctx.rx_buf = mqtt_rx_buf; mqtt_client_ctx.rx_buf_size = sizeof(mqtt_rx_buf);
+        mqtt_client_ctx.tx_buf = mqtt_tx_buf; mqtt_client_ctx.tx_buf_size = sizeof(mqtt_tx_buf);
+        mqtt_client_ctx.transport.type = MQTT_TRANSPORT_NON_SECURE;
+        if (mqtt_connect(&mqtt_client_ctx) == 0) { 
+            for(int i=0;i<10 && !mqtt_connected; i++) { mqtt_input(&mqtt_client_ctx); k_msleep(50); } 
+        }
+    } else { mqtt_input(&mqtt_client_ctx); mqtt_live(&mqtt_client_ctx); }
+}
+
+static int mqtt_publish_generic(const char *topic, const char *payload) {
+    if (!mqtt_connected) return -ENOTCONN;
+    struct mqtt_publish_param param; memset(&param, 0, sizeof(param));
+    param.message.topic.qos = MQTT_QOS_0_AT_MOST_ONCE; param.message.topic.topic.utf8 = (uint8_t *)topic;
+    param.message.topic.topic.size = strlen(topic); param.message.payload.data = (uint8_t *)payload; param.message.payload.len = strlen(payload);
+    return mqtt_publish(&mqtt_client_ctx, &param);
+}
+
+/* =========================================================================
+ * DRIVER RFID (SPI)
+ * ========================================================================= */
+
+static int wr_reg(uint8_t r, uint8_t v) { uint8_t tx[2]={(r<<1)&0x7E,v}; struct spi_buf b={tx,2}; struct spi_buf_set s={&b,1}; gpio_pin_set(gpioa_dev, CS_PIN, 0); spi_write(spi_dev,&spi_cfg,&s); gpio_pin_set(gpioa_dev, CS_PIN, 1); return 0; }
+static int rd_reg(uint8_t r, uint8_t *v) { uint8_t tx[2]={((r<<1)&0x7E)|0x80,0}, rx[2]; struct spi_buf tb={tx,2}, rb={rx,2}; struct spi_buf_set ts={&tb,1}, rs={&rb,1}; gpio_pin_set(gpioa_dev,CS_PIN,0); spi_transceive(spi_dev,&spi_cfg,&ts,&rs); gpio_pin_set(gpioa_dev,CS_PIN,1); *v=rx[1]; return 0; }
+static int fifo_wr(const uint8_t *d, size_t l) { for(size_t i=0;i<l;i++) wr_reg(0x09,d[i]); return 0; }
+static int fifo_rd(uint8_t *d, size_t l) { for(size_t i=0;i<l;i++) rd_reg(0x09,&d[i]); return 0; }
+static void rc522_rst(void) { wr_reg(0x01,0x0F); k_msleep(50); }
+static void rc522_init(void) { wr_reg(0x2A,0x8D); wr_reg(0x3B,0x3E); wr_reg(0x2C,0); wr_reg(0x2D,30); wr_reg(0x11,0x3D); wr_reg(0x12,0); wr_reg(0x13,0); wr_reg(0x15,0x40); wr_reg(0x24,0x26); wr_reg(0x26,0x70); uint8_t v; rd_reg(0x14,&v); wr_reg(0x14,v|0x03); }
+static bool rc522_xcv(const uint8_t *tx, size_t tl, uint8_t *rx, size_t *rl, uint8_t vb) { wr_reg(0x01,0); wr_reg(0x04,0x7F); wr_reg(0x0A,0x80); fifo_wr(tx,tl); wr_reg(0x0D,vb&7); wr_reg(0x01,0x0C); uint8_t bf; rd_reg(0x0D,&bf); wr_reg(0x0D,bf|0x80); uint8_t irq; for(int i=0;i<2000;i++) { rd_reg(0x04,&irq); if(irq&0x31) break; k_busy_wait(10); } rd_reg(0x0D,&bf); wr_reg(0x0D,bf&~0x80); if(!(irq&0x31) || (irq&1)) return false; uint8_t lvl; rd_reg(0x0A,&lvl); if(!lvl) return false; size_t n=MIN((size_t)lvl,*rl); fifo_rd(rx,n); *rl=n; return true; }
+static bool reqA(uint8_t *a) { size_t l=2; uint8_t t=0x26; if(rc522_xcv(&t,1,a,&l,7)&&l==2) return true; t=0x52; l=2; return rc522_xcv(&t,1,a,&l,7)&&l==2; }
+static bool anticoll(uint8_t *u) { uint8_t c[2]={0x93,0x20}, r[10]; size_t l=10; if(!rc522_xcv(c,2,r,&l,0)||l<5) return false; if((r[0]^r[1]^r[2]^r[3])!=r[4]) return false; memcpy(u,r,4); return true; }
+
+K_THREAD_STACK_DEFINE(rfid_stack, 2048);
+static struct k_thread rfid_thread_data;
+static void rfid_thread(void *a, void *b, void *c) {
+    spi_dev=DEVICE_DT_GET(SPI_BUS); gpioa_dev=DEVICE_DT_GET(GPIOA_NODE);
+    gpio_pin_configure(gpioa_dev, CS_PIN, GPIO_OUTPUT_ACTIVE); gpio_pin_set(gpioa_dev, CS_PIN, 1);
+    gpio_pin_configure(gpioa_dev, RST_PIN, GPIO_OUTPUT_ACTIVE); gpio_pin_set(gpioa_dev, RST_PIN, 1);
+    rc522_rst(); rc522_init();
+    uint8_t last[4]={0}; bool pres=false;
+    while(1) {
+        uint8_t atqa[2]; 
+        if(!reqA(atqa)) { if(pres) { pres=false; memset(last,0,4); } k_msleep(50); continue; }
+        uint8_t uid[4];
+        if(!anticoll(uid)) { rfid_error_request=true; k_msleep(100); continue; }
+        if(!pres || memcmp(uid,last,4)!=0) {
+            memcpy(last,uid,4); pres=true;
+            snprintf(last_badge_uid,sizeof(last_badge_uid),"%02X%02X%02X%02X",uid[0],uid[1],uid[2],uid[3]);
+            snprintf(last_rfid_log,sizeof(last_rfid_log),"UID:%s",last_badge_uid);
+            rfid_badge_ok_request=true;
+        }
+        k_msleep(150);
+    }
+}
+
+/* =========================================================================
+ * MAIN ENTRY POINT
+ * ========================================================================= */
+int main(void) {
+    /* --- Initialisation Drivers --- */
+    disp_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
+    gpio_pin_configure_dt(&backlight_gpio, GPIO_OUTPUT_INACTIVE);
+    display_blanking_on(disp_dev);
+    screen_is_active = false;
+    
+    if(device_is_ready(barrier_gpio.port)) gpio_pin_configure_dt(&barrier_gpio, GPIO_OUTPUT_INACTIVE);
+    gpio_pin_configure_dt(&capteur_lum, GPIO_INPUT | GPIO_PULL_UP);
+    gpio_pin_configure_dt(&relais_led, GPIO_OUTPUT_INACTIVE);
+    gpio_pin_configure_dt(&capteur_voiture, GPIO_INPUT);
+
+    /* --- Démarrage UI & Threads --- */
+    build_ui();
+    k_sleep(K_SECONDS(2));
+    k_thread_create(&rfid_thread_data, rfid_stack, 2048, rfid_thread, NULL, NULL, NULL, 7, 0, K_NO_WAIT);
+
+    /* --- Boucle Principale --- */
+    while(1) {
+        /* 1. Gestion Eclairage (Boucle Locale) */
+        gpio_pin_set_dt(&relais_led, gpio_pin_get_dt(&capteur_lum));
+
+        /* 2. Gestion Présence & Anti-Tailgating */
+        int voiture = gpio_pin_get_dt(&capteur_voiture);
+        
+        if (voiture != last_car_state) {
+            last_car_state = voiture;
+            
+            if (voiture == 1) {
+                /* Arrivée : On sort de veille, on sort du mode IT */
+                mode_it_actif = false;
+                mqtt_publish_generic(MQTT_TOPIC_PRES, "1");
+                debug_action_mode = false;
+                show_home(); 
+                if (!screen_is_active) { gpio_pin_set_dt(&backlight_gpio, 1); display_blanking_off(disp_dev); screen_is_active = true; }
+                ui_set_status_all("Presentez votre carte", lv_palette_main(LV_PALETTE_BLUE));
+            } 
+            else {
+                /* Départ */
+                mqtt_publish_generic(MQTT_TOPIC_PRES, "0");
+                if (barrier_unlocked) {
+                    if(screen_is_active) ui_set_status_all("Fermeture dans 5s...", lv_palette_main(LV_PALETTE_GREY));
+                    LVGL_TIMER_HANDLER(); 
+                    
+                    /* --- SECURITE : ANTI-TAILGATING --- */
+                    bool tailgating = false;
+                    for(int i=0; i < (DELAY_BEFORE_CLOSE/100); i++) {
+                        k_sleep(K_MSEC(100));
+                        if(gpio_pin_get_dt(&capteur_voiture) == 1) {
+                            tailgating = true;
+                            log_push("Suiveur ! CLOSE"); break; 
+                        }
+                    }
+                    barrier_set(false);
+                    mqtt_publish_generic(MQTT_TOPIC_BEAGLEY, "CLOSE");
+                    if (!tailgating) { log_push("Depart -> Close"); k_sleep(K_MSEC(DELAY_BEFORE_OFF)); }
+                }
+            }
+        }
+
+        /* 3. Gestion Veille Ecran */
+        bool condition_allumage = (mode_it_actif) || (voiture == 1) || (barrier_unlocked);
+        if (condition_allumage) {
+            if (!screen_is_active) { gpio_pin_set_dt(&backlight_gpio, 1); display_blanking_off(disp_dev); screen_is_active = true; }
+        } else {
+            if (screen_is_active) { gpio_pin_set_dt(&backlight_gpio, 0); display_blanking_on(disp_dev); screen_is_active = false; }
+        }
+
+        /* 4. Gestion RFID (Badge Scanné) */
+        if (rfid_badge_ok_request) {
+            rfid_badge_ok_request = false;
+            log_push(last_rfid_log);
+
+            /* Cas Badge Admin */
+            if (strcmp(last_badge_uid, ADMIN_BADGE_UID) == 0) {
+                if (voiture == 0) {
+                    mode_it_actif = !mode_it_actif;
+                    if (mode_it_actif) { ui_set_status_all("MODE IT ADMIN", lv_palette_main(LV_PALETTE_CYAN)); show_debug(false); } 
+                    else { ui_set_status_all("MISE EN VEILLE...", lv_palette_main(LV_PALETTE_GREY)); show_home(); }
+                } else {
+                    mode_it_actif = !mode_it_actif;
+                    if (mode_it_actif) { ui_set_status_all("MODE IT ADMIN", lv_palette_main(LV_PALETTE_CYAN)); show_debug(false); } 
+                    else { ui_set_status_all("Retour Accueil", lv_palette_main(LV_PALETTE_BLUE)); show_home(); }
+                }
+                LVGL_TIMER_HANDLER(); k_sleep(K_MSEC(1000));
+            }
+            /* Cas Badge Client */
+            else {
+                if (!voiture && !mode_it_actif) continue;
+                if (admin_mode_state == 1) { 
+                    ui_set_status_all("Envoi AJOUT...", lv_palette_main(LV_PALETTE_ORANGE)); ui_lock_timer = 2000; mqtt_publish_generic(MQTT_TOPIC_ADD, last_badge_uid);
+                } 
+                else if (admin_mode_state == 2) { 
+                    ui_set_status_all("Envoi SUPPRESSION...", lv_palette_main(LV_PALETTE_RED)); ui_lock_timer = 2000; mqtt_publish_generic(MQTT_TOPIC_DEL, last_badge_uid); 
+                }
+                else { 
+                    ui_set_status_all("Badge lu...", lv_palette_main(LV_PALETTE_BLUE)); ui_lock_timer = 1000; mqtt_publish_generic(MQTT_TOPIC_BADGE, last_badge_uid); 
+                }
+            }
+        }
+        
+        /* 5. Gestion Erreurs RFID */
+        if (screen_is_active && rfid_error_request) {
+            rfid_error_request = false;
+            if(!debug_action_mode) { ui_set_status_all("Erreur lecture", lv_palette_main(LV_PALETTE_RED)); ui_lock_timer = 1000; }
+            mqtt_publish_generic(MQTT_TOPIC_BADGE, "ERROR");
+        }
+
+        /* 6. Traitement des Commandes MQTT Asynchrones */
+        if (ui_lock_timer > 0) { ui_lock_timer -= 10; } 
+        else if (screen_is_active && !debug_action_mode && !barrier_unlocked && !mode_it_actif) {
+             ui_set_status_all("Presentez votre carte", lv_palette_main(LV_PALETTE_BLUE));
+        }
+
+        if (cmd_badge_valid_only) {
+            cmd_badge_valid_only = false;
+            ui_set_status_all("Badge OK -> Scan Plaque...", lv_palette_main(LV_PALETTE_YELLOW));
+            ui_lock_timer = 5000;
+            if (!screen_is_active) { gpio_pin_set_dt(&backlight_gpio, 1); display_blanking_off(disp_dev); screen_is_active = true; }
+        }
+
+        if (cmd_unlock) { 
+            cmd_unlock=false; barrier_set(true); 
+            mqtt_publish_generic(MQTT_TOPIC_BEAGLEY, "OPEN"); 
+            ui_set_status_all("Autorise - Passez", lv_palette_main(LV_PALETTE_GREEN)); 
+            ui_lock_timer = 5000;
+            if(!debug_action_mode) show_home();
+        }
+        if (cmd_deny) { 
+            cmd_deny=false; barrier_set(false); mqtt_publish_generic(MQTT_TOPIC_BEAGLEY, "CLOSE"); 
+            ui_set_status_all("Refuse", lv_palette_main(LV_PALETTE_RED)); 
+            ui_lock_timer = 3000;
+            if(!debug_action_mode) show_home();
+        }
+        if (cmd_added) { cmd_added=false; lv_label_set_text(status_debug,"SUCCES: AJOUTE !"); lv_obj_set_style_text_color(status_debug,lv_palette_main(LV_PALETTE_GREEN),0); log_push("Added OK"); LVGL_TIMER_HANDLER(); k_sleep(K_MSEC(2000)); show_debug(false); }
+        if (cmd_deleted) { cmd_deleted=false; lv_label_set_text(status_debug,"SUCCES: SUPPRIME !"); lv_obj_set_style_text_color(status_debug,lv_palette_main(LV_PALETTE_GREEN),0); log_push("Del OK"); LVGL_TIMER_HANDLER(); k_sleep(K_MSEC(2000)); show_debug(false); }
+        if (cmd_error_db) { cmd_error_db=false; lv_label_set_text(status_debug,"ERREUR DB"); lv_obj_set_style_text_color(status_debug,lv_palette_main(LV_PALETTE_ORANGE),0); }
+        if (cmd_it_debug_on) { cmd_it_debug_on=false; show_debug(true); }
+        if (cmd_it_debug_off) { cmd_it_debug_off=false; show_home(); }
+
+        /* Maintenance Tâches de fond */
+        LVGL_TIMER_HANDLER();
+        mqtt_service();
+        k_sleep(K_MSEC(10));
+    }
+    return 0;
+}

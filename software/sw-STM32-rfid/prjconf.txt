@@ -1,0 +1,65 @@
+# ==============================================================================
+# CONFIGURATION SYSTEME & DEBUG
+# ==============================================================================
+CONFIG_STDOUT_CONSOLE=y
+CONFIG_PRINTK=y
+CONFIG_LOG=y
+CONFIG_LOG_DEFAULT_LEVEL=3
+CONFIG_HEAP_MEM_POOL_SIZE=131072
+CONFIG_MAIN_STACK_SIZE=4096
+CONFIG_SYSTEM_WORKQUEUE_STACK_SIZE=4096
+
+# ==============================================================================
+# PERIPHERIQUES & DRIVERS
+# ==============================================================================
+CONFIG_GPIO=y
+CONFIG_SPI=y
+CONFIG_DISPLAY=y
+CONFIG_INPUT=y
+# Générateur d'entropie pour les ID aléatoires MQTT/Réseau
+CONFIG_ENTROPY_GENERATOR=y
+CONFIG_TEST_RANDOM_GENERATOR=y
+
+# ==============================================================================
+# INTERFACE GRAPHIQUE (LVGL)
+# ==============================================================================
+CONFIG_LVGL=y
+CONFIG_LV_Z_MEM_POOL_SIZE=16384
+CONFIG_LV_Z_POINTER_INPUT=y
+CONFIG_LV_USE_LABEL=y
+CONFIG_LV_USE_ARC=y
+CONFIG_LV_USE_MONKEY=y
+CONFIG_LV_FONT_MONTSERRAT_14=y
+# Logs LVGL activés pour le debug
+CONFIG_LV_USE_LOG=y
+
+# ==============================================================================
+# RESEAU (ETHERNET & IPV4)
+# ==============================================================================
+CONFIG_NETWORKING=y
+CONFIG_NET_IPV4=y
+CONFIG_NET_IPV6=n
+CONFIG_NET_TCP=y
+CONFIG_NET_UDP=y
+CONFIG_NET_SOCKETS=y
+CONFIG_NET_LOG=y
+
+# Buffers réseau (Optimisation pour éviter les blocages)
+CONFIG_NET_BUF_DATA_SIZE=256
+CONFIG_NET_PKT_RX_COUNT=16
+CONFIG_NET_PKT_TX_COUNT=16
+
+# ==============================================================================
+# ADRESSAGE STATIQUE (Projet Parking)
+# ==============================================================================
+CONFIG_NET_CONFIG_SETTINGS=y
+CONFIG_NET_CONFIG_NEED_IPV4=y
+CONFIG_NET_CONFIG_MY_IPV4_ADDR="192.168.78.3"
+CONFIG_NET_CONFIG_MY_IPV4_NETMASK="255.255.255.0"
+CONFIG_NET_CONFIG_MY_IPV4_GW="192.168.78.1"
+
+# ==============================================================================
+# PROTOCOLE MQTT
+# ==============================================================================
+CONFIG_MQTT_LIB=y
+CONFIG_MQTT_KEEPALIVE=60
