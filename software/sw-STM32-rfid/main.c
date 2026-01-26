@@ -1,8 +1,8 @@
-```c
+
 /**
  * @file main.c
  * @brief Firmware de gestion d'accès Parking (STM32 Node)
- * @author Tete de Clerville
+ * @author A.Falda
  * @version 1.0.4 (Integration Camera + RFID)
  * @date 2026-01-25
  * * @details Ce module gère l'interface LVGL, la lecture RFID via SPI,
@@ -536,4 +536,5 @@ int main(void) {
         k_sleep(K_MSEC(10));
     }
     return 0;
+
 }

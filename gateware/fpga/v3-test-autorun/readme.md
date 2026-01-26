@@ -1,10 +1,10 @@
 ---
 
-# Guide : Mise en place de l'Autorun (SD Card)
+# Mise en place de l'Autorun (SD Card)
 
-Ce guide explique comment configurer le système Linux embarqué pour qu'il exécute automatiquement un script modifiable (`startup.sh`) situé sur la carte SD au démarrage.
+Configuration du Linux pour qu'il exécute automatiquement un script modifiable (`startup.sh`) situé sur la carte SD au démarrage.
 
-**Avantage :** Cette méthode permet de modifier la configuration réseau ou les programmes à lancer **sans jamais avoir à recompiler le noyau ou le rootfs**. Il suffit d'éditer un fichier texte sur la carte SD depuis un PC.
+**Avantage :** Cette méthode permet de modifier la configuration réseau ou les programmes à lancer **sans jamais avoir à recompiler le noyau ou le rootfs**. Il suffit d'éditer un fichier texte sur la carte SD depuis un PC ou même de le transférer depuis **le réseau** !
 
 ---
 
