@@ -40,7 +40,8 @@ Il assure l'interface homme-machine, l'acquisition des données environnementale
 
 ## 📡 API MQTT
 
-Le système communique sur le réseau local `192.168.78.x`.
+Le système communique sur le réseau local configuré tel que :
+Broker @ 192.168.78.2, STM32 @ 192.168.78.3
 
 | Topic | Direction | Payload | Description |
 | :--- | :--- | :--- | :--- |
@@ -65,3 +66,4 @@ west build -p always -b stm32f746g_disco
 
 # Flashage sur la carte
 west flash
+
