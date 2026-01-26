@@ -1,0 +1,8 @@
+flask
+flask-login
+paho-mqtt
+opencv-python
+pytesseract
+numpy
+adafruit-circuitpython-bme680
+spidev
