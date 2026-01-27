@@ -1,4 +1,4 @@
-# 🧪 Environnement de Test & Simulation
+# Environnement de Test & Simulation
 
 ![Type](https://img.shields.io/badge/Type-Unit%20Tests-green)
 ![Mode](https://img.shields.io/badge/Mode-Simulation%20%26%20Hardware-blue)
@@ -67,5 +67,6 @@ Lance ces scripts directement sur la carte pour valider les composants physiques
 ```bash
 # Pour tester l'écran LCD
 python3 test_lcd_manager.py
+
 
 
