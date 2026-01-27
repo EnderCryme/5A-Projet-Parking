@@ -1,0 +1,93 @@
+/ {
+	aliases {
+		motor-enable = &motor_enable_pin;
+		motor-step   = &motor_step_pin;
+		motor-dir    = &motor_dir_pin;
+		sw0          = &fin_de_course;
+		floor-btn-0  = &floor0;
+		floor-btn-1  = &floor1;
+		floor-btn-2  = &floor2;
+	};
+
+	motor_pins: motor_pins {
+		compatible = "gpio-keys";
+		
+		/* ENABLE sur PI3 (D7) */
+		motor_enable_pin: motor_enable_pin {
+			gpios = <&gpioi 3 GPIO_ACTIVE_LOW>;
+			label = "Motor Enable";
+		};
+
+		/* STEP sur PA15 (D9) */
+		motor_step_pin: motor_step_pin {
+			gpios = <&gpioa 15 GPIO_ACTIVE_HIGH>;
+			label = "Motor STEP";
+		};
+
+		/* DIR sur PI2 (D8) */
+		motor_dir_pin: motor_dir_pin {
+			gpios = <&gpioi 2 GPIO_ACTIVE_HIGH>;
+			label = "Motor DIR";
+		};
+	};
+
+	gpio_keys {
+		compatible = "gpio-keys";
+		
+		/* Fin de course sur PH6 (D6) */
+		fin_de_course: switch_0 {
+			gpios = <&gpioh 6 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+			label = "Capteur Fin de Course";
+		};
+
+		/* Etage 0 sur D2 -> Vrai nom : PG6 */
+		floor0: floor_0 {
+			gpios = <&gpiog 6 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			label = "Etage 0";
+		};
+
+		/* Etage 1 sur D4 -> Vrai nom : PG7 */
+		floor1: floor_1 {
+			gpios = <&gpiog 7 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			label = "Etage 1";
+		};
+
+		/* Etage 2 sur D5 -> Vrai nom : PI0 */
+		floor2: floor_2 {
+			gpios = <&gpioi 0 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			label = "Etage 2";
+		};
+	};
+};
+
+/* Configuration SPI sur D10-D13 */
+&spi2 {
+	status = "okay";
+	pinctrl-0 = <&spi2_sck_pi1 &spi2_miso_pb14 &spi2_mosi_pb15>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpioa 8 GPIO_ACTIVE_LOW>; /* D10 */
+	
+	tmc_spi: tmc5160@0 {
+		compatible = "vnd,spi-device";
+		reg = <0>;
+		spi-max-frequency = <1000000>;
+		label = "TMC5160_SPI";
+	};
+};
+
+/* Console UART */
+&usart1 {
+	status = "okay";
+	current-speed = <115200>;
+	pinctrl-0 = <&usart1_tx_pa9 &usart1_rx_pb7>;
+	pinctrl-names = "default";
+};
+
+/* Capteur Distance */
+&i2c1 {
+	status = "okay";
+	vl53l0x: vl53l0x@29 {
+		compatible = "st,vl53l0x";
+		reg = <0x29>;
+	};
+};
