@@ -1,4 +1,4 @@
-# 📦 Modules Sources (Core Logic)
+#  Modules Sources (Core Logic)
 
 ![Type](https://img.shields.io/badge/Type-Backend%20Logic-blue)
 ![Language](https://img.shields.io/badge/Python-3.9-yellow)
@@ -56,3 +56,4 @@ Il permet de déporter l'intelligence dans le Cloud tout en gardant une exécuti
 1. Lire la plaque (IA locale).
 2. Envoyer le résultat en MQTT.
 3. Attendre l'ordre d'ouverture venant du serveur distant.
+
