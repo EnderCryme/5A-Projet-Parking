@@ -1,4 +1,4 @@
-# 🎨 Interface Web (Templates)
+# Interface Web (Templates)
 
 ![Tech](https://img.shields.io/badge/Tech-HTML5%20%7C%20CSS3%20%7C%20JS-orange)
 ![Engine](https://img.shields.io/badge/Render-Jinja2%20(Flask)-black)
@@ -51,3 +51,4 @@ Pour les visualiser, lancez le serveur de rendu dans le dossier `test/` :
 ```bash
 cd ../test
 python3 test_server_render.py
+
