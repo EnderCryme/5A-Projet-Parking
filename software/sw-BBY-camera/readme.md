@@ -87,7 +87,7 @@ Le système détecte automatiquement s'il tourne sur un PC (Simulation) ou sur l
 
 ```bash
 # Lancement du serveur principal
-python main.py
+python3 main_v08d.py
 
 ```
 
