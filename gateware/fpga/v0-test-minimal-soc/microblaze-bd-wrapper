@@ -1,46 +1,41 @@
+--Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+--Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+----------------------------------------------------------------------------------
+--Tool Version: Vivado v.2024.2 (win64) Build 5239630 Fri Nov 08 22:35:27 MST 2024
+--Date        : Tue Jan  6 11:36:04 2026
+--Host        : PC-ESSRJ running 64-bit major release  (build 9200)
+--Command     : generate_target Microblaze_wrapper.bd
+--Design      : Microblaze_wrapper
+--Purpose     : IP block netlist
+----------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
-entity microblaze_bd_wrapper is
+library UNISIM;
+use UNISIM.VCOMPONENTS.ALL;
+entity Microblaze_wrapper is
   port (
-    buzzer_out_0  : out STD_LOGIC;
-    clk           : in  STD_LOGIC;
-    led_dir_0     : out STD_LOGIC;
-    led_sensor_0  : out STD_LOGIC;
-    phases_0      : out STD_LOGIC_VECTOR(3 downto 0);
-    prox_sensor_i : in  STD_LOGIC;
-    rx_0          : in  STD_LOGIC;
-    tx_0          : out STD_LOGIC
+    clk : in STD_LOGIC;
+    reset : in STD_LOGIC;
+    usb_uart_rxd : in STD_LOGIC;
+    usb_uart_txd : out STD_LOGIC
   );
-end microblaze_bd_wrapper;
+end Microblaze_wrapper;
 
-architecture Structural of microblaze_bd_wrapper is
-
-  component microblaze_bd is
-    port (
-      buzzer_out_0  : out STD_LOGIC;
-      clk           : in  STD_LOGIC;
-      led_dir_0     : out STD_LOGIC;
-      led_sensor_0  : out STD_LOGIC;
-      phases_0      : out STD_LOGIC_VECTOR(3 downto 0);
-      prox_sensor_i : in  STD_LOGIC;
-      rx_0          : in  STD_LOGIC;
-      tx_0          : out STD_LOGIC
-    );
-  end component;
-
+architecture STRUCTURE of Microblaze_wrapper is
+  component Microblaze is
+  port (
+    usb_uart_rxd : in STD_LOGIC;
+    usb_uart_txd : out STD_LOGIC;
+    reset : in STD_LOGIC;
+    clk : in STD_LOGIC
+  );
+  end component Microblaze;
 begin
-
-  u_microblaze_bd : microblaze_bd
-    port map (
-      buzzer_out_0  => buzzer_out_0,
-      clk           => clk,
-      led_dir_0     => led_dir_0,
-      led_sensor_0  => led_sensor_0,
-      phases_0      => phases_0,
-      prox_sensor_i => prox_sensor_i,
-      rx_0          => rx_0,
-      tx_0          => tx_0
+Microblaze_i: component Microblaze
+     port map (
+      clk => clk,
+      reset => reset,
+      usb_uart_rxd => usb_uart_rxd,
+      usb_uart_txd => usb_uart_txd
     );
-
-end Structural;
+end STRUCTURE;
