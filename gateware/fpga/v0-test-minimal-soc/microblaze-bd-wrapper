@@ -1,0 +1,46 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity microblaze_bd_wrapper is
+  port (
+    buzzer_out_0  : out STD_LOGIC;
+    clk           : in  STD_LOGIC;
+    led_dir_0     : out STD_LOGIC;
+    led_sensor_0  : out STD_LOGIC;
+    phases_0      : out STD_LOGIC_VECTOR(3 downto 0);
+    prox_sensor_i : in  STD_LOGIC;
+    rx_0          : in  STD_LOGIC;
+    tx_0          : out STD_LOGIC
+  );
+end microblaze_bd_wrapper;
+
+architecture Structural of microblaze_bd_wrapper is
+
+  component microblaze_bd is
+    port (
+      buzzer_out_0  : out STD_LOGIC;
+      clk           : in  STD_LOGIC;
+      led_dir_0     : out STD_LOGIC;
+      led_sensor_0  : out STD_LOGIC;
+      phases_0      : out STD_LOGIC_VECTOR(3 downto 0);
+      prox_sensor_i : in  STD_LOGIC;
+      rx_0          : in  STD_LOGIC;
+      tx_0          : out STD_LOGIC
+    );
+  end component;
+
+begin
+
+  u_microblaze_bd : microblaze_bd
+    port map (
+      buzzer_out_0  => buzzer_out_0,
+      clk           => clk,
+      led_dir_0     => led_dir_0,
+      led_sensor_0  => led_sensor_0,
+      phases_0      => phases_0,
+      prox_sensor_i => prox_sensor_i,
+      rx_0          => rx_0,
+      tx_0          => tx_0
+    );
+
+end Structural;
