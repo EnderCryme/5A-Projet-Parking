@@ -96,14 +96,6 @@ $$ IPN = \frac{\text{Cœurs} \times \text{Fréquence} \times \text{GPIO}}{\text{
 
 Le RP2350 est **~19x plus rentable** pour ce rôle de supervision. Il récupère les infos du BQ40Z50 via SMBus et gère l'affichage, laissant la sécurité pure aux puces TI.
 
-C'est noté. Voici la section complète **5. Bilan de Puissance & Autonomie** qui intègre les **deux tableaux** : le détail de la consommation par composant (pour justifier le dimensionnement) et le récapitulatif de l'autonomie selon les scénarios d'usage (incluant le mode Repos à 18 W).
-
----
-
-C'est une excellente idée, l'image permet de visualiser instantanément pourquoi le BMS doit être robuste. Elle s'intègre parfaitement en introduction du bilan de puissance pour justifier le "Worst Case Scenario".
-
-Voici la section mise à jour, intégrant l'image, le tableau détaillé et les estimations d'autonomie.
-
 ---
 
 ## **5. Bilan de Puissance & Autonomie**
