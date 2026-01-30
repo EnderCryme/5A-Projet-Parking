@@ -1,6 +1,21 @@
-# 🅿️ Projet Parking Système Modulable (PSM)
 
-Ce projet implémente un système de gestion de parking intelligent, modulaire et connecté. Il repose sur une architecture distribuée combinant intelligence artificielle, systèmes temps réel et logique câblée/programmable.
+# 🅿️ Système de Parking Modulable Intelligent (PSM)
+
+![Status](https://img.shields.io/badge/Status-Prototype_Fonctionnel-success)
+![Architecture](https://img.shields.io/badge/Architecture-Distributed_IoT-blueviolet)
+![License](https://img.shields.io/badge/License-MIT-grey)
+
+**Plateformes :**
+![BeagleY-AI](https://img.shields.io/badge/Brain-BeagleY--AI-blue)
+![STM32](https://img.shields.io/badge/Edge-STM32F746-green)
+![FPGA](https://img.shields.io/badge/Control-Nexys_A7--100T-orange)
+
+**Stack Technique :**
+![Languages](https://img.shields.io/badge/Code-C_%7C_Python_%7C_Verilog-lightgrey)
+![OS](https://img.shields.io/badge/OS-Linux_%7C_Zephyr_RTOS-yellow)
+![Protocol](https://img.shields.io/badge/Com-MQTT_%7C_Ethernet-red)
+
+---
 
 ## 👥 Équipe Projet
 * **FALDA Andy**
@@ -10,91 +25,107 @@ Ce projet implémente un système de gestion de parking intelligent, modulaire e
 
 ---
 
-## 🏗️ Architecture Globale
+## 📖 Description du Projet
 
-Le système fonctionne sur un réseau local dédié où les différents modules communiquent via le protocole **MQTT**.
+Ce projet implémente un écosystème complet de gestion de parking. Il démontre une architecture distribuée où chaque module (Cerveau, Interface, Actionneur) communique sur un réseau local via le protocole **MQTT**.
 
-* **Cerveau (BeagleY-AI)** : Serveur central, traitement d'image (OCR), Dashboard Web.
-* **Point d'entrée (STM32)** : Gestion des accès RFID, IHM tactile, capteurs environnementaux.
-* **Actionneurs (FPGA)** : Contrôle matériel bas niveau (Barrières, Moteurs) via un SoC RISC-V sous Linux.
+Le système combine :
+1.  **Intelligence Artificielle (OCR)** pour la lecture de plaques minéralogiques.
+2.  **Système Temps Réel (Zephyr)** pour l'interaction utilisateur et la gestion RFID.
+3.  **Accélération Matérielle (FPGA/SoC RISC-V)** pour le pilotage précis des barrières motorisées.
 
-### 🌐 Configuration Réseau (Adressage Statique)
+---
 
-Tous les périphériques sont connectés sur le même sous-réseau. Le serveur MQTT est hébergé sur la BeagleY-AI.
+## 🛠 Architecture & Réseau
 
-| Module | Rôle | Adresse IP |
-| :--- | :--- | :--- |
-| **BeagleY-AI** | Serveur / Broker MQTT / Web | `192.168.78.2` |
-| **STM32 (RFID)** | Contrôle d'accès & UI | `192.168.78.3` |
-| **FPGA (Nexys A7)** | Pilotage Barrières (SoC Linux) | `192.168.78.10` |
+Le système repose sur un réseau local Ethernet fermé. La **BeagleY-AI** agit comme le nœud central (Broker MQTT & Serveur Web).
+
+### 🌐 Configuration IP (Statique)
+
+| Module | Rôle | OS / Firmware | Adresse IP |
+| :--- | :--- | :--- | :--- |
+| **BeagleY-AI** | **Cerveau** : Broker MQTT, OCR, Dashboard Web | Linux (Debian) | `192.168.78.2` |
+| **STM32 F7** | **Entrée** : RFID, Écran Tactile, Capteurs | Zephyr RTOS | `192.168.78.3` |
+| **FPGA Nexys** | **Moteurs** : Driver Barrières, SoC Custom | Linux (Buildroot) | `192.168.78.10` |
+
+### 📡 Synoptique des Flux MQTT
+
+| Topic | Source | Destination | Description |
+| :--- | :--- | :--- | :--- |
+| `RFID/ID` | STM32 | BeagleY | Envoi de l'UID du badge scanné. |
+| `RFID/CMD` | BeagleY | STM32 | Réponse d'accès (`UNLOCK` / `DENY`). |
+| `parking/barrier`| BeagleY | FPGA | Ordre d'ouverture/fermeture physique. |
+| `video/stream` | BeagleY | Dashboard | Flux vidéo temps réel de la caméra. |
 
 ---
 
 ## 📂 Structure du Dépôt
 
 ```text
-├── gateware/                # Code et configuration FPGA
-│   └── fpga/                # Sources Verilog/LiteX pour le SoC RISC-V
-├── hardware/                # Conception Mécanique et Électronique
-│   ├── model3D/             # Fichiers CAO (Onshape) : Barrières, supports
-│   └── pcb-designs/         # Schémas électroniques
-├── software/                # Code source des différents modules
-│   ├── sw-BBY-camera/       # Python : OpenCV/Tesseract + Serveur Web
-│   ├── sw-FPGA-barrieres/   # C/Linux : Driver moteurs barrières
-│   ├── sw-STM32-ascenseur/  # C/Zephyr : Gestion de l'ascenseur
-│   └── sw-STM32-rfid/       # C/Zephyr : Gestion RFID RC522 + Écran tactile
-└── references/              # Documentation et datasheets
+├── gateware/                # 🧱 FPGA (Logique Programmable)
+│   └── fpga/                # Sources SoC LiteX + VexRiscv
+│       ├── v0-test-minimal  # SoC de test basique
+│       └── v3-test-autorun  # SoC final (Linux Ready)
+│
+├── hardware/                # ⚙️ Conception Mécanique & PCB
+│   ├── model3D/             # Fichiers CAO Onshape (Barrières, boîtiers)
+│   └── pcb-designs/         # Schémas des cartes filles
+│
+├── software/                # 💻 Codes Sources
+│   ├── sw-BBY-camera/       # [Python] Serveur, OpenCV, Tesseract
+│   ├── sw-FPGA-barrieres/   # [C/Linux] Driver moteurs pour le SoC FPGA
+│   ├── sw-STM32-ascenseur/  # [C/Zephyr] Gestion de l'ascenseur
+│   └── sw-STM32-rfid/       # [C/Zephyr] Gestion principale Entrée (RFID/UI)
+│
+└── references/              # 📚 Documentation technique & PDF Projet
 ```
 
 ---
 
-## 🔧 Détails des Modules
+## 🧩 Détails des Modules
 
 ### 1. BeagleY-AI (Le Cerveau)
-* **OS** : Linux
-* **Langages** : Python
-* **Fonctionnalités** :
-    * **Reconnaissance de plaques (LAPI)** : Utilisation d'OpenCV pour le traitement d'image et Tesseract (OCR) pour la lecture.
-    * **Serveur Web** : Interface de supervision (Dashboard) en HTML/CSS pour visualiser le flux vidéo et l'état du parking.
-    * **Logique de contrôle** : Validation des plaques via un système de vote (3 images consécutives).
+* **Traitement d'image :** Utilisation d'**OpenCV** (localisation, recadrage) et **Tesseract** (OCR) pour extraire les numéros de plaque.
+* **Algorithme de Vote :** Validation de la plaque sur 3 images consécutives pour fiabiliser la lecture.
+* **Dashboard :** Interface Web HTML/CSS hébergée localement pour le monitoring vidéo et l'état du parking.
 
-### 2. STM32F746 Discovery (L'Entrée Physique)
-* **OS** : Zephyr RTOS
-* **Langage** : C
-* **Fonctionnalités** :
-    * **RFID (SPI)** : Lecture des badges via module RC522. Envoi des UID via MQTT (`RFID/ID`).
-    * **Interface Homme-Machine** : Écran tactile pour feedback utilisateur (UNLOCK/DENY).
-    * **Gestion Éclairage** : Capteur de luminosité (photo-résistance) et pilotage relais 12V.
-    * **Modes Spéciaux** : Badge "Maître" pour accès maintenance et forçage mode éco.
+### 2. STM32F746 (L'Interface Edge)
+* **Identification :** Lecteur RFID RC522 sur bus SPI.
+* **Interaction :** IHM tactile développée avec **LVGL** (Feedback utilisateur, codes erreur).
+* **Éco-gestion :** Gestion de la luminosité (Photo-résistance) et extinction automatique de l'écran si aucune présence véhicule n'est détectée.
+* **Sécurité :** Badge "Maître" codé en dur pour forcer l'ouverture ou accéder au menu maintenance.
 
-### 3. FPGA Nexys A7-100T (Le Contrôle Moteur)
-* **Architecture** : SoC Custom (LiteX + VexRiscv)
-* **OS Embarqué** : Linux (Buildroot)
-* **Fonctionnalités** :
-    * **Gestion Barrières** : Pilotage de drivers moteurs pas-à-pas.
-    * **Connectivité** : Liaison Ethernet hardware mappée via AXI.
-    * **Commande** : Réception des ordres `open/close` via MQTT et traduction en signaux moteurs.
+### 3. FPGA Nexys A7 (La Puissance)
+* **SoC Custom :** Implémentation d'un processeur **RISC-V 32-bits** sur le FPGA via LiteX.
+* **Linux Embarqué :** Le FPGA fait tourner un noyau Linux minimal capable de mapper les périphériques moteurs via `mmap`.
+* **Motorisation :** Contrôle de puissance des barrières via drivers externes pilotés par le SoC.
 
 ---
 
-## 🚀 Installation et Démarrage
+## 🚀 Installation & Démarrage
 
 ### Pré-requis
-* **STM32** : Environnement Zephyr RTOS installé (`west`).
-* **BeagleY-AI** : Python 3, `paho-mqtt`, `opencv-python`, `pytesseract`.
-* **FPGA** : Vivado et Toolchain LiteX/RISC-V.
+* Routeur/Switch configuré pour le sous-réseau `192.168.78.x`.
+* **Outils :** West (Zephyr), Vivado (Xilinx), Python 3.
 
-### Instructions Rapides
-1. **Réseau** : Configurer le routeur ou le switch pour le sous-réseau `192.168.78.x`.
-2. **BeagleY-AI** : Lancer le script principal dans `software/sw-BBY-camera`.
-3. **STM32** : Compiler et flasher le firmware :
-   ```bash
-   west build -b stm32f746g_disco software/sw-STM32-rfid
-   west flash
-   ```
-4. **FPGA** : Charger le bitstream situé dans `gateware/fpga/v3-test-autorun` et démarrer le noyau Linux via TFTP ou SD.
+### Procédure Rapide
+
+1.  **BeagleY-AI :**
+    ```bash
+    cd software/sw-BBY-camera
+    python3 main_server.py
+    ```
+2.  **STM32 (Flash) :**
+    ```bash
+    west build -b stm32f746g_disco software/sw-STM32-rfid
+    west flash
+    ```
+3.  **FPGA :**
+    *   Charger le bitstream depuis `gateware/fpga/v3-test-autorun`.
+    *   Le Linux embarqué démarrera automatiquement et se connectera au réseau.
 
 ---
 
 ## 📚 Références
-Pour plus de détails techniques, consulter le document : `references/Projet_CAUQUIL_FALDA_CLERVILLE_ES-SRIEJ.pdf`
+* [Documentation Complète (PDF)](references/Projet_CAUQUIL_FALDA_CLERVILLE_ES-SRIEJ.pdf)
+* [LiteX - Linux on RISC-V](https://github.com/litex-hub/linux-on-litex-vexriscv)
