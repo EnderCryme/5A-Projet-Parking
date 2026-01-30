@@ -1,0 +1,23 @@
+PARAMETRE,VALEUR,UNITE,COMMENTAIRE
+"CELLULE INDIVIDUELLE (Samsung INR18650-35E)",,,
+"Tension Nominale",3.6,V,"Tension moyenne"
+"Tension Max (Charge)",4.2,V,"Pleine charge"
+"Tension Min (Cut-off)",2.65,V,"Décharge profonde (datasheet)"
+"Capacité Typique",3500,mAh,"Donnée constructeur"
+"Capacité Retenue (Design)",3400,mAh,"Marge de sécurité (conservative)"
+"Courant Max Décharge",8,A,"Continu"
+,,,
+"CONFIGURATION DU PACK (4S3P)",,,
+"Nombre de cellules série (S)",4,,"Augmente la tension"
+"Nombre de cellules parallèle (P)",3,,"Augmente la capacité/courant"
+"Total Cellules",12,pcs,
+,,,
+"CARACTERISTIQUES DU PACK",,,
+"Tension Nominale Pack",14.4,V,"3.6V * 4"
+"Tension Max Pack",16.8,V,"4.2V * 4 (Tension CV)"
+"Tension Min Pack (Safe)",12.0,V,"3.0V * 4 (Seuil BMS soft)"
+"Capacité Totale",10.2,Ah,"3.4Ah * 3"
+"Energie Totale",146.9,Wh,"Nominale (14.4V * 10.2Ah)"
+"Energie Max Théorique",151.0,Wh,"Basé sur 14.8V moy"
+"Courant Max Continu",24,A,"8A * 3"
+"Puissance Max Continue",345.6,W,"14.4V * 24A"
