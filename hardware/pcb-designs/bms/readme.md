@@ -1,7 +1,3 @@
-Voici la fusion des deux documents, rédigée dans le style "rapport technique / ingénierie" demandé : clair, structuré avec des badges, un peu moins formel mais rigoureux sur la technique.
-
----
-
 # **Battery Management System (BMS)**
 
 ![Status](https://img.shields.io/badge/Status-Prototype-yellow)
