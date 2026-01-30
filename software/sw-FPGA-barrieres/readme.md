@@ -1,84 +1,103 @@
-# Rôle de la FPGA : 
+# 🚧 Contrôleur de Barrière FPGA (SoC RISC-V)
 
+![Status](https://img.shields.io/badge/Status-Stable-success)
+![Platform](https://img.shields.io/badge/Platform-Nexys_A7--100T-orange)
+![Arch](https://img.shields.io/badge/Arch-RISC--V_32-red)
+![OS](https://img.shields.io/badge/OS-Linux_Buildroot-yellow)
 
+## 📖 Description
 
+Ce module contient le logiciel embarqué tournant sur le processeur softcore (VexRiscv) implémenté dans le FPGA. Il fait le lien entre le monde IoT (commandes MQTT via Ethernet) et le hardware (Drivers moteurs physiques).
 
-
-
-
-
-> **Note** : La compilation est cross-compiler : 
-> ```bash
-> ~/parking_fpga/buildroot/output/host/bin/riscv32-buildroot-linux-gnu-gcc v4.c -o v4 -march=rv32ima -mabi=ilp32 -lmosquitto ```
-
-# Historique des Versions - Contrôleur de Barrière MQTT
+Le programme interagit avec les registres matériels des contrôleurs de moteurs pas-à-pas via **Memory Mapped I/O (MMIO)** et s'abonne au broker MQTT pour recevoir les ordres d'ouverture/fermeture.
 
 ---
 
-## v0 : Version Initiale (Preuve de Concept)
-*Fichier source : `v0-test-concept.c`*
+## ⚡ Démarrage Automatique (Autorun)
 
-C'est la version de base pour valider le fonctionnement du moteur et du protocole MQTT.
+Le système est conçu pour être autonome. Une fois le bitstream (Gateware) chargé sur la FPGA, le SoC démarre et cherche un système de fichiers sur la carte SD.
 
-* **Gestion Unique :** Ne contrôle qu'une seule barrière avec une adresse mémoire codée en dur (`0xF0000000`).
-* **MQTT Simple :** S'abonne au topic global `parking/barrier`.
-* **Commandes Basiques :** Accepte uniquement les payloads `OPEN` et `CLOSE`.
-* **Séquence Fixe :** Utilise des tableaux statiques `seq_open` et `seq_close` pour la rotation du moteur.
-* **Sécurité :** Vérifie l'état actuel (`is_open`) avant d'agir pour éviter d'ouvrir une barrière déjà ouverte.
+**Dossier :** `Nexys-SD-Ready/`
 
----
+Pour préparer une carte SD bootable :
+1. Formater la carte SD en **FAT32**.
+2. Copier l'intégralité du contenu du dossier `Nexys-SD-Ready/` à la racine de la carte.
+3. Insérer la carte dans le slot de la Nexys A7.
+4. Mettre sous tension.
 
-## v1 : Gestion des IDs et du Sens (Logiciel)
-*Fichier source : `v1-ids-sens.c`*
-
-Cette version introduit la flexibilité logicielle pour gérer plusieurs barrières virtuelles et différents montages physiques.
-
-* **Identifiant en Argument :** Le programme prend un ID en paramètre (`./v1 0`, `./v1 1`...) pour personnaliser les topics MQTT.
-* **Topics Dynamiques :** Les topics deviennent `parking/barrier_{ID}/state` et `parking/barrier_{ID}/sens`.
-* **Inversion de Sens :** Ajout de la variable `invert_sens` et du topic `/sens`. Permet de changer le sens de rotation (Normal/Inversé) logiciellement sans re-câbler le moteur (utile selon que le moteur est monté à gauche ou à droite de la barrière).
-* **Limitation :** L'adresse mémoire reste codée en dur (`0xF0000000`), donc tous les IDs pilotent physiquement le même connecteur.
+> **Mécanisme :** Le fichier `startup.sh` présent à la racine est exécuté automatiquement au boot de Linux. Il lance le binaire `v4` avec la configuration par défaut.
 
 ---
 
-## v2 : Mode Calibration & Test
-*Fichier source : `v2-configuration.c`*
+## 🛠 Compilation (Cross-Compile)
 
-Outil de diagnostic conçu pour déterminer le calibrage exact du moteur.
+Le code C ne peut pas être compilé avec le `gcc` de votre PC (x86), il doit être compilé pour l'architecture RISC-V cible.
 
-* **Topic de Test :** Écoute sur `parking/test` pour ne pas interférer avec la production.
-* **Contrôle Brut :** Ne gère pas d'état "Ouvert/Fermé". On envoie directement le nombre de pas et la direction.
-* **Commandes Spécifiques :**
-    * `pXXX` (ex: `p64`) : Lance XXX cycles en sens **P**ositif.
-    * `mXXX` (ex: `m128`) : Lance XXX cycles en sens **M**inus (Inverse).
-* **Objectif :** A servi à définir la constante `CYCLES_REQUIRED` (fixée à 128 par la suite pour une rortation de 90 deg).
+**Pré-requis :** Toolchain Buildroot générée.
 
----
-
-## v3 : Support Multi-Adresses (Matériel)
-*Fichier source : `v3-multiple-adress.c`*
-
-Première version capable de piloter physiquement des barrières différentes sur la carte FPGA.
-
-* **Table de Mapping :** Introduction du tableau `BARRIER_ADDRS[]` qui associe chaque ID (0, 1, 2, 3) à son adresse physique réelle (0xF0000000, 0xF0000800, etc.).
-* **Sélection Dynamique :** L'argument ID (`argv[1]`) sert maintenant à choisir la bonne adresse mémoire lors de l'initialisation (`mmap`).
-* **Logique Complète :** Intègre toutes les avancées précédentes (Open/Close + Inversion de sens).
-* **Architecture :** Prévu pour lancer une instance du programme par barrière (ex: un processus pour la barrière 0, un autre pour la 1).
-
----
-
-## v4 : Architecture Unifiée & Configuration Avancée (Finale)
-*Fichier source : `v4-run-multiple.c`*
-
-Cette version représente l'aboutissement du projet. Elle abandonne l'approche "un programme par barrière" pour un gestionnaire unique et intelligent capable de tout piloter.
-
-* **Processus Unique :** Un seul programme (`./v4`) gère simultanément plusieurs barrières physiques. Cela réduit la charge CPU et simplifie le déploiement.
-* **Structure Objet :** Le code utilise une structure C (`struct Barrier`) pour stocker isolément l'état, l'adresse mémoire et le sens de chaque moteur.
-* **Configuration Dynamique (CLI) :** Les barrières à activer sont passées en arguments au lancement. Le programme ne mappe en mémoire et ne s'abonne MQTT que pour les IDs demandés.
-* **Syntaxe `ID:SENS` :** Introduction d'une syntaxe pour définir l'état initial physique sans attendre de commande MQTT.
-    * *Exemple :* `./v4 0:1 2:0` lance la barrière 0 en mode *Inversé* et la barrière 2 en mode *Normal*.
-* **Optimisation :** Une seule connexion MQTT (Mosquitto) est partagée pour recevoir les ordres de toutes les barrières, avec un dispatching intelligent vers la bonne structure en fonction du topic reçu.
-
----
-````bash 
-mosquitto_pub -h localhost -t "parking/barrier_0/state" -m "OPEN"
+```bash
+# Exemple de commande de compilation pour la version finale (v4)
+~/parking_fpga/buildroot/output/host/bin/riscv32-buildroot-linux-gnu-gcc \
+    src/v4-run-multiple.c \
+    -o bin/v4 \
+    -march=rv32ima \
+    -mabi=ilp32 \
+    -lmosquitto
 ```
+
+* `-lmosquitto` : Link avec la librairie client MQTT.
+* `-march=rv32ima` : Architecture RISC-V 32-bits (Integer, Multiply, Atomic).
+
+---
+
+## 📜 Historique des Versions
+
+Le développement du driver a suivi une approche itérative, passant d'un test simple à un gestionnaire multi-barrières robuste.
+
+### v0 : Version Initiale (Preuve de Concept)
+* **Fichier :** `v0-test-concept.c`
+* **Fonctionnalité :** Contrôle une seule barrière à l'adresse hardcodée `0xF0000000`.
+* **Logique :** Séquence de rotation fixe (tableaux statiques). Bloque l'exécution pendant le mouvement.
+* **MQTT :** Topic global simple `parking/barrier`.
+
+### v1 : Gestion des IDs et du Sens (Soft)
+* **Fichier :** `v1-ids-sens.c`
+* **Nouveauté :** Introduction des arguments CLI (`./v1 [ID]`).
+* **Topics Dynamiques :** `parking/barrier_{ID}/state`.
+* **Inversion Logique :** Ajout du paramètre "Sens" pour compenser le montage physique (Moteur à gauche ou à droite) sans recâblage.
+* *Limite :* Pilote toujours la même adresse physique, quel que soit l'ID.
+
+### v2 : Mode Calibration & Test
+* **Fichier :** `v2-configuration.c`
+* **Objectif :** Outil de diagnostic pour déterminer le nombre de pas exact pour 90°.
+* **Mode RAW :** Pas d'état "Ouvert/Fermé", mais des commandes directes de pas via MQTT (`parking/test`).
+    * `p64` : 64 pas sens Positif.
+    * `m128` : 128 pas sens Minus.
+* **Résultat :** A permis de fixer la constante `CYCLES_REQUIRED = 128`.
+
+### v3 : Support Multi-Adresses (Hardware)
+* **Fichier :** `v3-multiple-adress.c`
+* **Nouveauté :** Mapping réel des adresses physiques.
+* **Table de Mapping :** Associe un ID logiciel (0, 1...) à une adresse AXI physique (`0xF0000000`, `0xF0000800`...).
+* **Usage :** Nécessite de lancer une instance du programme par barrière physique.
+
+### 🌟 v4 : Architecture Unifiée (Finale)
+* **Fichier :** `v4-run-multiple.c`
+* **Architecture :** Gestionnaire unique (Single Process) pour tout le parking.
+* **Optimisation :** Une seule connexion MQTT partagée. Structure C objet (`struct Barrier`) pour isoler les états.
+* **CLI Avancée :** Configuration au lancement sous la forme `ID:SENS`.
+    * Exemple : `./v4 0:1 2:0` (Lance Barrière 0 en sens inversé et Barrière 2 en sens normal).
+* **Déploiement :** C'est cette version qui est lancée par le `startup.sh`.
+
+---
+
+## 📡 Utilisation MQTT
+
+Pour piloter une barrière depuis le réseau (ou la BeagleBone) :
+
+```bash
+# Ouvrir la barrière 0
+mosquitto_pub -h 192.168.78.2 -t "parking/barrier_0/state" -m "OPEN"
+
+# Fermer la barrière 0
+mosquitto_pub -h 192.168.78.2 -t "parking/barrier_0/state" -m "CLOSE"
