@@ -183,3 +183,35 @@ La sécurité est implémentée en couches successives ("Oignon de sécurité") 
 2.  **Protection Secondaire :** Le BQ296102 surveille uniquement les surtensions (OVP) et sous-tensions (UVP). S'il déclenche, il grille un fusible chimique commandé (CIP) pour isoler physiquement le pack.
 3.  **Thermique :** 4 sondes NTC sont collées directement sur les cellules pour détecter tout emballement thermique.
 4.  **Physique :** Fusibles sur les I/O et diodes TVS sur les ports externes (USB-C, borniers).
+
+---
+
+## **7. Interfaces d'Entrées/Sorties & Extensions (I/O)**
+
+Le BMS a été conçu pour être plus qu'une simple alimentation : c'est un périphérique intelligent et interactif. L'architecture autour du **RP2350** exploite ses nombreuses broches pour offrir des fonctions de diagnostic local, de pilotage fin des sorties et de mise à jour simplifiée.
+
+### **7.1. Port Master & Programmation (Lien BeagleBone)**
+Une interface de communication privilégiée relie le BMS au cerveau du robot (BeagleBone AI-64). Ce port remplit un double rôle crucial via les lignes de données (D+/D-) :
+*   **Télémétrie & Contrôle :** En fonctionnement normal, le BeagleBone récupère les statistiques (SOC, puissance instantanée) via une liaison série/USB.
+*   **Mise à jour Firmware (Mode Prog) :** Le BMS peut basculer en mode "Bootloader", permettant au BeagleBone de reflasher le RP2350 à la volée. Cela garantit un système évolutif, capable de recevoir des correctifs ou de nouvelles stratégies de charge sans démontage matériel.
+
+### **7.2. Interface Homme-Machine (IHM) Locale**
+Pour faciliter le diagnostic sur le terrain (sans avoir besoin de connecter un PC), le BMS intègre sa propre interface utilisateur :
+*   **Écran OLED (I2C) :** Affiche en temps réel l'état de santé du pack (SOH), le pourcentage de batterie, la tension globale et le courant consommé/chargé.
+*   **Boutons de Navigation :** Une série de boutons poussoirs permet de naviguer dans les menus affichés sur l'OLED pour :
+    *   Consulter les tensions individuelles des cellules.
+    *   Modifier les réglages à la volée (ex : forcer un mode "Stockage" à 50% de charge).
+    *   Réinitialiser les erreurs éventuelles.
+
+### **7.3. Supervision & Pilotage des Rails de Sortie**
+Le BMS ne se contente pas de fournir de la puissance, il vérifie la qualité de ce qu'il délivre et contrôle la distribution :
+*   **ADC de Monitoring (Feedback) :** Le RP2350 mesure en continu via ses ADCs les tensions réelles présentes sur les sorties de puissance. Cela permet de détecter une sous-tension (brownout) ou une défaillance d'un régulateur en aval.
+*   **GPIOs "Enable" :** Chaque rail de puissance majeur (notamment les 4 sorties principales) est piloté par un commutateur de charge (*Load Switch*) activable individuellement par logiciel.
+    *   *Scénario :* Le BMS peut choisir de couper l'alimentation des moteurs tout en gardant l'unité de calcul (BeagleBone) allumée en cas de batterie faible critique.
+
+### **7.4. Gestion Thermique Active & Sécurité Étendue**
+Compte tenu des puissances en jeu (jusqu'à 100W en crête), la gestion thermique est renforcée :
+*   **NTC Additionnelles :** Des connecteurs pour sondes de température externes permettent de surveiller des points chauds spécifiques (ex: transistors de puissance, connecteurs forts courants).
+*   **Pilotage Ventilateur (PWM) :** Une sortie PWM dédiée permet de piloter un micro-ventilateur. Le RP2350 asservit la vitesse du ventilateur à la température mesurée par les NTCs, assurant un refroidissement actif de l'étage de puissance lors des charges rapides ou des fortes sollicitations moteurs.
+
+> **Synthèse I/O :** Cette panoplie d'interfaces transforme le BMS en un véritable **superviseur d'énergie**, offrant une observabilité totale et une capacité d'action autonome pour protéger le robot.
