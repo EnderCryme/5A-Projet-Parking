@@ -30,7 +30,7 @@
 Ce projet implémente un écosystème complet de gestion de parking. Il démontre une architecture distribuée où chaque module (Cerveau, Interface, Actionneur) communique sur un réseau local via le protocole **MQTT**.
 
 Le système combine :
-1.  **Intelligence Artificielle (OCR)** pour la lecture de plaques minéralogiques.
+1.  **Intelligence Artificielle (OCR)** pour la lecture de plaques d'immatriculation ANPR.
 2.  **Système Temps Réel (Zephyr)** pour l'interaction utilisateur et la gestion RFID.
 3.  **Accélération Matérielle (FPGA/SoC RISC-V)** pour le pilotage précis des barrières motorisées.
 
@@ -84,10 +84,10 @@ Le système repose sur un réseau local Ethernet fermé. La **BeagleY-AI** agit 
 
 ### 1. BeagleY-AI (Le Cerveau)
 * **Traitement d'image :** Utilisation d'**OpenCV** (localisation, recadrage) et **Tesseract** (OCR) pour extraire les numéros de plaque.
-* **Algorithme de Vote :** Validation de la plaque sur 3 images consécutives pour fiabiliser la lecture.
+* **Algorithme de Vote :** Validation de la plaque sur 3 images consécutives (par vote) pour fiabiliser la lecture.
 * **Dashboard :** Interface Web HTML/CSS hébergée localement pour le monitoring vidéo et l'état du parking.
 
-### 2. STM32F746 (L'Interface Edge)
+### 2. STM32F746 (L'Interface Physique)
 * **Identification :** Lecteur RFID RC522 sur bus SPI.
 * **Interaction :** IHM tactile développée avec **LVGL** (Feedback utilisateur, codes erreur).
 * **Éco-gestion :** Gestion de la luminosité (Photo-résistance) et extinction automatique de l'écran si aucune présence véhicule n'est détectée.
