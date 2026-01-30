@@ -17,18 +17,27 @@ Le programme interagit avec les registres matériels des contrôleurs de moteurs
 
 Le système est conçu pour être autonome. Une fois le bitstream (Gateware) chargé sur la FPGA, le SoC démarre et cherche un système de fichiers sur la carte SD.
 
-**Dossier :** `Nexys-SD-Ready/`
+**Dossier :** `gateware/fpga/sd-image/`
 
-Pour préparer une carte SD bootable :
-1. Formater la carte SD en **FAT32**.
-2. Copier l'intégralité du contenu du dossier `Nexys-SD-Ready/` à la racine de la carte.
-3. Insérer la carte dans le slot de la Nexys A7.
-4. Mettre sous tension.
+### Préparation de la Carte SD
+1. **Compilation (si modification du code C) :**
+   Assurez-vous que le binaire `v4` à jour est présent dans le dossier image.
+   ```bash
+   # Exemple de copie après compilation
+   cp software/sw-FPGA-barrieres/v4 gateware/fpga/sd-image/
+   ```
 
-> **Mécanisme :** Le fichier `startup.sh` présent à la racine est exécuté automatiquement au boot de Linux. Il lance le binaire `v4` avec la configuration par défaut.
+2. **Copie sur SD :**
+   * Formater la carte SD en **FAT32**.
+   * Copier l'intégralité du contenu du dossier `gateware/fpga/sd-image/` à la racine de la carte.
 
+3. **Lancement :**
+   * Insérer la carte dans le slot de la Nexys A7.
+   * Charger le bitstream via Vivado.
+   * Le système démarre automatiquement.
+
+> **Mécanisme :** Le fichier `startup.sh` présent à la racine est exécuté automatiquement au boot de Linux. Il configure le réseau et lance le binaire `v4` avec la configuration par défaut.
 ---
-
 ## 🛠 Compilation (Cross-Compile)
 
 Le code C ne peut pas être compilé avec le `gcc` de votre PC (x86), il doit être compilé pour l'architecture RISC-V cible.
