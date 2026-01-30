@@ -103,24 +103,31 @@ Le système repose sur un réseau local Ethernet fermé. La **BeagleY-AI** agit 
 ## 🚀 Installation & Démarrage
 
 ### Pré-requis
-* Routeur/Switch configuré pour le sous-réseau `192.168.78.x`.
-* **Outils :** West (Zephyr), Vivado (Xilinx), Python 3.
+* **Réseau :** Routeur ou Switch configuré pour le sous-réseau `192.168.78.x`.
+* **Outils :**
+    * [STM32] **West** (Zephyr Toolchain)
+    * [FPGA] **Vivado** (Xilinx Lab Tools)
+    * [Beagle] **Python 3**
 
 ### Procédure Rapide
 
-1.  **BeagleY-AI :**
+1.  **BeagleY-AI (Lancement Serveur) :**
     ```bash
     cd software/sw-BBY-camera
     python3 main.py
     ```
-2.  **STM32 (Flash) :**
+
+2.  **STM32 (Build & Flash) :**
     ```bash
+    # Depuis la racine du projet
     west build -b stm32f746g_disco software/sw-STM32-rfid
     west flash
     ```
-3.  **FPGA :**
-    *   Charger le bitstream depuis `gateware/fpga/v3-test-autorun`.
-    *   Le Linux embarqué démarrera automatiquement et se connectera au réseau.
+
+3.  **FPGA (Bitstream & Boot) :**
+    *   Ouvrir Vivado Hardware Manager.
+    *   Charger le bitstream situé dans `gateware/fpga/v3-test-autorun`.
+    *   *Résultat :* Le SoC démarre, charge le Linux depuis la carte SD et rejoint le réseau automatiquement.
 
 ---
 
