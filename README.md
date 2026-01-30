@@ -35,8 +35,6 @@ Tous les périphériques sont connectés sur le même sous-réseau. Le serveur M
 ```text
 ├── gateware/                # Code et configuration FPGA
 │   └── fpga/                # Sources Verilog/LiteX pour le SoC RISC-V
-│       ├── v0-test-minimal  # SoC minimal
-│       └── v3-test-autorun  # Version finale avec Linux embarqué
 ├── hardware/                # Conception Mécanique et Électronique
 │   ├── model3D/             # Fichiers CAO (Onshape) : Barrières, supports
 │   └── pcb-designs/         # Schémas électroniques
