@@ -8,7 +8,7 @@
 Ce dossier contient l’ensemble des fichiers de conception de la **carte BMS** (Battery Management System).  
 L'objectif est de fournir une alimentation autonome, robuste et sécurisée pour le système embarqué hétérogène (BeagleY-AI, STM32, FPGA Nexys et moteurs).
 
-Tout est conçu sous **KiCad 7**, avec une attention particulière aux contraintes haute tension (16.8V), aux courants forts et à la sécurité thermique.
+Tout est conçu sous **KiCad 7**, avec une attention particulière aux contraintes haute tension (16.8 V), aux courants forts et à la sécurité thermique.
 
 ---
 
@@ -30,10 +30,10 @@ Tout est conçu sous **KiCad 7**, avec une attention particulière aux contraint
 
 Le BMS ne se contente pas de charger des batteries ; il gère toute la distribution de puissance. L'architecture repose sur un trio de composants **Texas Instruments** pour la partie puissance/sécurité, et un **RP2350** pour l'intelligence applicative.
 
-![Architecture Simplifiée](https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Battery_management_system_diagram.png/640px-Battery_management_system_diagram.png)
+![Architecture Simplifiée](BMS_schem.png)
 
 ### **Le Trio de Puissance (TI)**
-La mesure critique et la sécurité sont **100% hardware**, découplées du microcontrôleur pour une fiabilité maximale.
+La mesure critique et la sécurité sont **100 % hardware**, découplées du microcontrôleur pour une fiabilité maximale.
 
 | Composant | Fonction | Pourquoi ce choix ? |
 |:----------|:---------|:--------------------|
@@ -45,21 +45,31 @@ La mesure critique et la sécurité sont **100% hardware**, découplées du micr
 
 ---
 
-## **2. Dimensionnement du Pack Batterie (4S3P)**
+## **2. Dimensionnement du Battery Pack – 4S3P**
 
-Nous avons opté pour une configuration **4S3P** (4 Série, 3 Parallèle) utilisant des cellules **Samsung INR18650‑35E** (3.7V, 3400 mAh).
+Le choix des cellules s'est porté sur des **Samsung INR18650‑35E** (3.7 V, 3400 mAh), assemblées en une configuration **4S3P**.
 
-### **Pourquoi 4S (14.8V - 16.8V) ?**
-Lors des tests mécaniques, les moteurs pas-à-pas montraient des signes de faiblesse (à-coups, couple instable) sous 12V.
-*   **Solution :** Passer à une tension pack plus élevée.
-*   Le pack 4S permet d'atteindre **16.8V** en pleine charge.
-*   Couplé au **Boost du BQ25713**, nous pouvons fournir un rail **20V stable** aux moteurs, garantissant couple et fluidité.
-
-### **Capacité et Énergie**
+### **Caractéristiques du Pack**
 *   **Capacité :** $3 \times 3.4\,Ah = 10.2\,Ah$
-*   **Énergie :** $14.8\,V \times 10.2\,Ah \approx 151\,Wh$
-*   **Tension de coupure (Sécurité) :** $3.2\,V \times 4 = 12.8\,V$
+*   **Énergie :** $14.8\,V \times 10.2\,Ah = 151\,Wh$
+*   **Tension Nominale :** 14.8 V
+*   **Tension Max (Charge) :** 16.8 V
+*   **Tension Min (Sécurité) :** 12.8 V
 
+### **2.1. Justification du 4S et Évolution vers 20 V**
+
+**L'approche initiale :**
+Le pack 4S a été dimensionné initialement pour s'aligner sur une tension système globale de **12 V à 15 V**, idéale pour limiter les pertes de conversion vers les rails logiques (5V) et périphériques standards (12V).
+
+**Le constat mécanique :**
+Lors des tests d'intégration, nous avons remarqué que le moteur pas-à-pas de l'ascenseur (Stepper) manquait de fluidité sous 15 V (à-coups à haute vitesse, couple instable). Les essais ont montré un comportement mécanique optimal et parfaitement fluide sous **18–20 V**.
+
+**La solution architecturale (Buck-Boost) :**
+Ce changement de prérequis n'a pas impacté la batterie. L'architecture de puissance de la carte BMS intègre une topologie flexible :
+*   **Buck (Abaisseur) :** Pour générer les rails 12 V, 5 V et 3.3 V avec un haut rendement.
+*   **Boost (Élévateur) :** Pour rehausser la tension batterie (12.8V - 16.8V) vers le rail **20 V** nécessaire aux moteurs.
+
+> Cette flexibilité permet de conserver un pack compact (4S) et compatible USB-C PD, tout en fournissant la haute tension requise par la mécanique.
 ---
 
 ## **3. Entrée USB-C Power Delivery**
@@ -90,36 +100,79 @@ C'est noté. Voici la section complète **5. Bilan de Puissance & Autonomie** qu
 
 ---
 
+C'est une excellente idée, l'image permet de visualiser instantanément pourquoi le BMS doit être robuste. Elle s'intègre parfaitement en introduction du bilan de puissance pour justifier le "Worst Case Scenario".
+
+Voici la section mise à jour, intégrant l'image, le tableau détaillé et les estimations d'autonomie.
+
+---
+
 ## **5. Bilan de Puissance & Autonomie**
 
-Le dimensionnement énergétique repose sur un pack **4S3P de 151 Wh** (14.8V / 10.2Ah).
+Le dimensionnement énergétique du BMS est dicté par une architecture matérielle complexe et hétérogène. L'image ci-dessous résume l'ensemble des composants actifs dans le scénario de consommation maximale ("Max du Max").
 
-### **5.1. Détail des charges connectées**
-Le tableau suivant détaille la consommation maximale théorique de chaque sous-système connecté au BMS.
+![Hardware Ecosystem](bilan-puissance-max.png)
+*Vue d'ensemble des charges connectées : FPGA, Processeurs AI, Microcontrôleurs et Actionneurs.*
 
-| Charge | Tension | Courant | Puissance |
-|:-------|:--------|:--------|:----------|
+### **5.1. Détail de la consommation (Worst Case)**
+Le tableau suivant quantifie la puissance requise lorsque tous les éléments ci-dessus sont sollicités simultanément (Calcul intensif + Moteurs en couple de maintien ou mouvement).
+
+| Charge | Tension | Courant Max | Puissance |
+|:-------|:--------|:------------|:----------|
 | **BeagleY‑AI** | 5 V | 3 A | **15 W** |
 | **Nexys A7‑100T (FPGA)** | 5 V | 3 A | **15 W** |
-| **Moteurs NEMA (20 V)** | 20 V | 1 A | **20 W** |
+| **Moteurs NEMA (via Boost)** | 20 V | 1 A | **20 W** |
 | **Strip LED** | 12 V | 0.5 A | **6 W** |
 | **2× STM32F746** | 5 V | 1 A | **5 W** |
 | **2× Mini‑Stepper** | 5 V | 0.8 A | **4 W** |
 | **TOTAL (Nominal)** | | | **65 W** |
 
-> **Note :** Une marge de sécurité de **20 %** est appliquée au total nominal pour absorber les transitoires moteurs et le vieillissement des cellules, portant le dimensionnement "Pire Cas" à **78 W**.
+> **Dimensionnement Sécuritaire :** Avec une marge de sécurité de **20 %** (pics de courant moteurs et rendement des convertisseurs), le système est dimensionné pour fournir jusqu'à **78 W** en pointe.
 
 ### **5.2. Scénarios d'autonomie**
-Nous avons mesuré une consommation plancher de **18 W** lorsque tout le système est connecté mais au repos (Idle). Voici les autonomies estimées :
+Le pack batterie **4S3P (151 Wh)** offre une grande flexibilité d'usage. Nous avons mesuré une consommation plancher (Idle) de **18 W** lorsque tout le système est alimenté mais en attente d'instruction.
 
 | Scénario | Condition | Puissance | Autonomie estimée |
 |:---------|:----------|:----------|:------------------|
-| **Intensif (Marge)** | Full Load + 20% sécurité (pics) | 78 W | **≈ 1h 55** |
-| **Intensif (Nominal)** | Tous systèmes actifs à 100% | 65 W | **≈ 2h 20** |
+| **Intensif (Marge)** | Full Load + 20 % (Stress test) | 78 W | **≈ 1h 55** |
+| **Intensif (Nominal)** | Robot en mouvement + IA active | 65 W | **≈ 2h 20** |
 | **Mixte** | Usage standard moyen | 40 W | **≈ 3h 45** |
-| **Repos (Idle)** | Tout connecté, pas de mouvement, CPU idle | **18 W** | **≈ 8h 20** |
+| **Repos (Idle)** | Tout connecté, moteurs à l'arrêt | **18 W** | **≈ 8h 20** |
 
-> **Conclusion :** L'autonomie en mode "Repos" assure une journée complète de travail (**> 8h**) sans recharge si le système ne sollicite pas les moteurs en continu.
+> **Conclusion :** L'architecture garantit près de **2 heures** d'autonomie en régime maximal hors réseau (calcul IA + déplacement continu) et assure une journée complète (**>8h**) en veille active, permettant la continuité du service de parking même en cas de coupure du réseau électrique, ou durant une maintenant.
+
+### **5.3. Extension d'Autonomie (Solaire / Éolien 50 W)**
+
+Pour répondre aux exigences d'un fonctionnement en extérieur ou en site isolé, l'architecture d'alimentation permet l'intégration de sources d'énergie renouvelables. Le dimensionnement cible un apport de **50 W** (ex: panneau solaire monocristallin standard ou petite éolienne).
+
+Cet apport transforme le BMS en système hybride, capable de recharge en cours de fonctionnement (*Pass-through Charging*).
+
+#### **Impact du scénario 50 W sur le bilan énergétique**
+L'injection de 50 W permet de couvrir intégralement la consommation au repos et mixte, et de compenser drastiquement la consommation en pleine charge.
+
+| Mode de fonctionnement | Consommation ($P_{load}$) | Apport Solaire ($P_{in}$) | Bilan Net sur Batterie ($P_{net}$) | Conséquence |
+|:---|:---:|:---:|:---:|:---|
+| **Repos (Idle)** | 18 W | + 50 W | **+ 32 W (Recharge)** | **Autonomie Infinie** + Recharge rapide du pack |
+| **Mixte (Standard)** | 40 W | + 50 W | **+ 10 W (Recharge)** | **Autonomie Infinie** + Maintien de charge |
+| **Intensif (Nominal)** | 65 W | + 50 W | **- 15 W (Décharge)** | Décharge très lente. Autonomie étendue à **≈ 10h** (vs 2h20) |
+
+#### **Méthodologie de calcul du gain**
+L'autonomie étendue ($T_{ext}$) est calculée en fonction du **Bilan Net** de puissance puisée sur la batterie. Avec un robot consommant **65 W** et un apport de **50 W**, le différentiel est de :
+
+$$P_{net} = 65~W - 50~W = \mathbf{15~W}$$
+
+L'autonomie théorique devient alors :
+$$T_{ext} = \cfrac{E_{batt}}{P_{net}} = \cfrac{151~Wh}{15~W} \approx \mathbf{10,06~Heures}$$
+
+#### **Implémentation technique simplifiée (USB-C PD)**
+L'intégration de cette source d'énergie est rendue native par l'usage du port **USB-C** bidirectionnel. Il n'est pas nécessaire de modifier le hardware du BMS, ni d'ajouter des convertisseurs MPPT externes complexes.
+
+1.  **Côté Source (Solaire/Éolien) :** Il suffit d'équiper la sortie du panneau d'un **contrôleur USB-PD standard**. Celui-ci négocie automatiquement la tension optimale (ex: 20 V) dès la connexion.
+2.  **Gestion Intelligente (RP2350 & BQ25713) :**
+    *   Le **RP2350** détecte la connexion et communique avec le BQ25713 via I2C.
+    *   Il identifie le profil de puissance disponible (PDO) annoncé par la source.
+    *   Il adapte dynamiquement la limite de courant d'entrée ($I_{in\_{lim}}$) pour maximiser la puissance extraite sans effondrer la tension du panneau, garantissant une stabilité parfaite du système hybride.
+
+> **Conclusion "Smart Grid" :** L'apport solaire ne se contente pas de recharger la batterie ; il soulage le pack de **77 %** de l'effort en charge nominale. Cela multiplie l'autonomie opérationnelle par un facteur **4**, permettant de tenir une journée de travail intense sans jamais se brancher au secteur.
 
 ---
 ## **6. Sécurité (Safety Layers)**
