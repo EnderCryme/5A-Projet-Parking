@@ -64,8 +64,6 @@ Le système repose sur un réseau local Ethernet fermé. La **BeagleY-AI** agit 
 ```text
 ├── gateware/                # 🧱 FPGA (Logique Programmable)
 │   └── fpga/                # Sources SoC LiteX + VexRiscv
-│       ├── v0-test-minimal  # SoC de test basique
-│       └── v3-test-autorun  # SoC final (Linux Ready)
 │
 ├── hardware/                # ⚙️ Conception Mécanique & PCB
 │   ├── model3D/             # Fichiers CAO Onshape (Barrières, boîtiers)
@@ -113,7 +111,7 @@ Le système repose sur un réseau local Ethernet fermé. La **BeagleY-AI** agit 
 1.  **BeagleY-AI :**
     ```bash
     cd software/sw-BBY-camera
-    python3 main_server.py
+    python3 main.py
     ```
 2.  **STM32 (Flash) :**
     ```bash
