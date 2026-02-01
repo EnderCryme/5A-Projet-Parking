@@ -1,4 +1,4 @@
-# 🔋 Firmware BMS Intelligent 
+# 🔋 Firmware/Software BMS Intelligent 
 
 ## 📖 Présentation Logicielle
 
@@ -6,7 +6,7 @@ Ce dépôt contient le firmware de contrôle pour le sous-ensemble BMS. Dévelop
 
 Le code assure la lecture des paramètres critiques de la batterie, la gestion de l'affichage local et le pilotage des sécurités de l'étage de puissance.
 
-## 🛠️ Architecture du Firmware
+## 🛠️ Architecture du Firmware/Software
 
 ### 1. Communication SMBus / I2C
 
