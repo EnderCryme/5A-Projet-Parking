@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP STUSB4700QTR
+D Stand-alone autonomous USB PD controller with short-to-VBUS protections
+K
+F https://www.st.com/resource/en/datasheet/stusb4700.pdf
+$ENDCMP
+#
+#End Doc Library

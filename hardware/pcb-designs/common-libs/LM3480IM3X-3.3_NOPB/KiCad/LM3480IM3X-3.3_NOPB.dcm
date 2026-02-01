@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP LM3480IM3X-3.3_NOPB
+D 100 mA, SOT-23, Quasi Low-Dropout Linear Voltage Regulator
+K
+F http://www.ti.com/lit/gpn/lm3480
+$ENDCMP
+#
+#End Doc Library

@@ -1,0 +1,30 @@
+EESchema-LIBRARY Version 2.3
+#encoding utf-8
+#SamacSys ECAD Model BQ296103DSGT
+#/259147/1633577/2.50/9/3/Integrated Circuit
+DEF BQ296103DSGT IC 0 30 Y Y 1 F N
+F0 "IC" 850 300 50 H V L CNN
+F1 "BQ296103DSGT" 850 200 50 H V L CNN
+F2 "SON50P200X200X80-9N" 850 100 50 H I L CNN
+F3 "http://www.ti.com/lit/ds/symlink/bq2961.pdf" 850 0 50 H I L CNN
+F4 "Battery Management 2-4S Overvoltage Protector" 850 -100 50 H I L CNN "Description"
+F5 "0.8" 850 -200 50 H I L CNN "Height"
+F6 "595-BQ296103DSGT" 850 -300 50 H I L CNN "Mouser Part Number"
+F7 "https://www.mouser.co.uk/ProductDetail/Texas-Instruments/BQ296103DSGT?qs=cGEy3R83DS9PZfYUV0hTtA%3D%3D" 850 -400 50 H I L CNN "Mouser Price/Stock"
+F8 "Texas Instruments" 850 -500 50 H I L CNN "Manufacturer_Name"
+F9 "BQ296103DSGT" 850 -600 50 H I L CNN "Manufacturer_Part_Number"
+DRAW
+X VDD 1 0 0 200 R 50 50 0 0 P
+X V4 2 0 -100 200 R 50 50 0 0 P
+X V3 3 0 -200 200 R 50 50 0 0 P
+X V2 4 0 -300 200 R 50 50 0 0 P
+X EP 9 500 -800 200 U 50 50 0 0 P
+X OUT 8 1000 0 200 L 50 50 0 0 P
+X REG 7 1000 -100 200 L 50 50 0 0 P
+X VSS 6 1000 -200 200 L 50 50 0 0 P
+X V1 5 1000 -300 200 L 50 50 0 0 P
+P 5 0 1 6 200 100 800 100 800 -600 200 -600 200 100 N
+ENDDRAW
+ENDDEF
+#
+#End Library

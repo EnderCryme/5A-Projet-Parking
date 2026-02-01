@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP FDN358P
+D High Performance Trench Technology for Extremely Low rDS(on); High Power Version of Industry Standard SOT-23 Package. Identical Pin-Out to SOT-23 with 30% Higher Power Handling Capability; RDS(ON) = 200 m @ VGS = 4.5 V. ; -1.5 A, -30 V; Low Gate Charge (4 nC typical); RDS(ON) = 125 m @ VGS = 10 V
+K
+F https://www.onsemi.com/pub/Collateral/FDN358P-D.PDF
+$ENDCMP
+#
+#End Doc Library

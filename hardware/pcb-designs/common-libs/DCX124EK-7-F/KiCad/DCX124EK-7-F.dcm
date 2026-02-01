@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP DCX124EK-7-F
+D Bipolar Transistors - Pre-Biased PREBIASED TRANSISTOR SOT-26 300MW
+K
+F https://www.diodes.com//assets/Datasheets/DCX_XXXX_K.pdf
+$ENDCMP
+#
+#End Doc Library

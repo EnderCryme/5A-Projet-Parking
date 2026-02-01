@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP CSD17551Q3A
+D MOSFET 30V N-Chnl MOSFET
+K
+F https://www.ti.com/lit/ds/symlink/csd17551q3a.pdf?ts=1644417423923&ref_url=https%253A%252F%252Fwww.mouser.in%252F
+$ENDCMP
+#
+#End Doc Library

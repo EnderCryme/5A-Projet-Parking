@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP LM1084IS-ADJ_NOPB
+D 5A Fixed / Adjustable Output Linear Regulator
+K
+F http://www.ti.com/lit/ds/symlink/lm1084.pdf
+$ENDCMP
+#
+#End Doc Library

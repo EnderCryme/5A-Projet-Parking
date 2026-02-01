@@ -1,0 +1,201 @@
+(footprint "BAT54HT1G"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(descr "SOD-323 - case 477-02 - issue H")
+	(tags "Schottky Diode")
+	(property "Reference" "D**"
+		(at 0 0 0)
+		(layer "F.SilkS")
+		(uuid "60eca491-9aa6-4b5a-b829-35d6bd39ff1e")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.254)
+			)
+		)
+	)
+	(property "Value" "BAT54HT1G"
+		(at 0 0 0)
+		(layer "F.SilkS")
+		(hide yes)
+		(uuid "f35c6b97-cdd1-4bb9-b4aa-a4b1e9d7dad2")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.254)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "1f39a705-1525-4f58-9bec-ec1da083b0a9")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "91144615-ad27-4f0d-aeda-97b6ebb54e7d")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(fp_line
+		(start -1.7 -0.625)
+		(end 0.85 -0.625)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "3fc3855d-495a-42a6-ba51-26d9d8417dc8")
+	)
+	(fp_line
+		(start -0.85 0.625)
+		(end 0.85 0.625)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "09689ca7-48c4-4912-b9a2-c994d1fe7c32")
+	)
+	(fp_line
+		(start -1.95 -1.15)
+		(end 1.95 -1.15)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "f5c7854f-6c2e-496c-8ec2-765312b76618")
+	)
+	(fp_line
+		(start -1.95 1.15)
+		(end -1.95 -1.15)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "78bd36c9-ac4a-4fcd-93e7-1dc33759d583")
+	)
+	(fp_line
+		(start 1.95 -1.15)
+		(end 1.95 1.15)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "2ec1db36-e6ff-4653-b794-d99ab00eb517")
+	)
+	(fp_line
+		(start 1.95 1.15)
+		(end -1.95 1.15)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "8e6721b6-1c6e-44b3-a95d-3653f51aceb9")
+	)
+	(fp_line
+		(start -0.85 -0.625)
+		(end 0.85 -0.625)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "23a529b5-3c9c-451a-9532-a60366e9f0a7")
+	)
+	(fp_line
+		(start -0.85 -0.125)
+		(end -0.35 -0.625)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "817ffe47-127a-4c80-b030-8bac8ce50826")
+	)
+	(fp_line
+		(start -0.85 0.625)
+		(end -0.85 -0.625)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "0b968373-af61-4fb6-b791-5055f10159d6")
+	)
+	(fp_line
+		(start 0.85 -0.625)
+		(end 0.85 0.625)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "3096efac-a517-463d-acaf-c63be3888135")
+	)
+	(fp_line
+		(start 0.85 0.625)
+		(end -0.85 0.625)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "c87debad-ed5d-4f17-bc15-77ae3ca2fc18")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(uuid "9cbce2f9-dc5d-48d8-af6b-ea2a63e9700d")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.254)
+			)
+		)
+	)
+	(pad "1" smd rect
+		(at -1.2 0 90)
+		(size 0.5 1)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "42088c5d-0dc4-4a0d-b7b2-f6d5c46bf040")
+	)
+	(pad "2" smd rect
+		(at 1.2 0 90)
+		(size 0.5 1)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "f6494915-c784-4ebd-82ed-78a51e32d471")
+	)
+	(embedded_fonts no)
+	(model "D:/Documents/KiCad-Cstm/BAT54HT1G/3D/BAT54HT1G.stp"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)

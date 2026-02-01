@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP BQ40Z50RSMR-R2
+D Battery Management 1-Series, 2-Series, 3-Series, and 4-Series Li-Ion Battery 32-VQFN -40 to 85
+K
+F http://www.ti.com/lit/gpn/bq40z50-r2
+$ENDCMP
+#
+#End Doc Library

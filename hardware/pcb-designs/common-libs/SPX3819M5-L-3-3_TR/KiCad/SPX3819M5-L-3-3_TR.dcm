@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP SPX3819M5-L-3-3_TR
+D LDO Voltage Regulators 500mA LOW NOISE LDO
+K
+F https://www.exar.com/ds/spx3819.pdf
+$ENDCMP
+#
+#End Doc Library

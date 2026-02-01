@@ -1,0 +1,30 @@
+EESchema-LIBRARY Version 2.3
+#encoding utf-8
+#SamacSys ECAD Model ST1S14PHR
+#/221961/1633577/2.50/9/2/Integrated Circuit
+DEF ST1S14PHR IC 0 30 Y Y 1 F N
+F0 "IC" 1050 300 50 H V L CNN
+F1 "ST1S14PHR" 1050 200 50 H V L CNN
+F2 "SOIC127P600X175-9N" 1050 100 50 H I L CNN
+F3 "https://www.st.com/resource/en/datasheet/st1s14.pdf" 1050 0 50 H I L CNN
+F4 "STMICROELECTRONICS - ST1S14PHR - DC-DC Switching Buck Step Down Regulator, Adjustable, 5.5V-48V in, 3A out, 1MHz, HSOP-8" 1050 -100 50 H I L CNN "Description"
+F5 "1.75" 1050 -200 50 H I L CNN "Height"
+F6 "511-ST1S14PHR" 1050 -300 50 H I L CNN "Mouser Part Number"
+F7 "https://www.mouser.co.uk/ProductDetail/STMicroelectronics/ST1S14PHR?qs=NQm4g1eHia4Ogn8sLa%252BqDg%3D%3D" 1050 -400 50 H I L CNN "Mouser Price/Stock"
+F8 "STMicroelectronics" 1050 -500 50 H I L CNN "Manufacturer_Name"
+F9 "ST1S14PHR" 1050 -600 50 H I L CNN "Manufacturer_Part_Number"
+DRAW
+X BOOT 1 0 0 200 R 50 50 0 0 P
+X PG 2 0 -100 200 R 50 50 0 0 P
+X ~EN1 3 0 -200 200 R 50 50 0 0 P
+X FB 4 0 -300 200 R 50 50 0 0 P
+X EN2 5 1200 -300 200 L 50 50 0 0 P
+X GND 6 1200 -200 200 L 50 50 0 0 P
+X VIN 7 1200 -100 200 L 50 50 0 0 P
+X SW 8 1200 0 200 L 50 50 0 0 P
+X E.P. 9 600 -800 200 U 50 50 0 0 P
+P 5 0 1 6 200 100 1000 100 1000 -600 200 -600 200 100 N
+ENDDRAW
+ENDDEF
+#
+#End Library

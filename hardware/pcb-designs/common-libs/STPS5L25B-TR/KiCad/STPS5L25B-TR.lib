@@ -1,0 +1,24 @@
+EESchema-LIBRARY Version 2.3
+#encoding utf-8
+#SamacSys ECAD Model STPS5L25B-TR
+#/222471/1633577/2.50/3/2/Schottky Diode
+DEF STPS5L25B-TR D 0 30 Y Y 1 F N
+F0 "D" 750 300 50 H V L CNN
+F1 "STPS5L25B-TR" 750 200 50 H V L CNN
+F2 "STPS5L25BTR" 750 100 50 H I L CNN
+F3 "https://www.st.com/resource/en/datasheet/stps5l25.pdf" 750 0 50 H I L CNN
+F4 "Low drop power Schottky rectifier 5.0 Amp 25 Volt" 750 -100 50 H I L CNN "Description"
+F5 "2.63" 750 -200 50 H I L CNN "Height"
+F6 "511-STPS5L25B" 750 -300 50 H I L CNN "Mouser Part Number"
+F7 "https://www.mouser.co.uk/ProductDetail/STMicroelectronics/STPS5L25B-TR?qs=NDbFxHnTsWx5E0AFSTeRaQ%3D%3D" 750 -400 50 H I L CNN "Mouser Price/Stock"
+F8 "STMicroelectronics" 750 -500 50 H I L CNN "Manufacturer_Name"
+F9 "STPS5L25B-TR" 750 -600 50 H I L CNN "Manufacturer_Part_Number"
+DRAW
+X NC 1 900 -100 200 L 50 50 0 0 N
+X K 2 0 0 200 R 50 50 0 0 P
+X A 3 900 0 200 L 50 50 0 0 P
+P 5 0 1 6 200 100 700 100 700 -200 200 -200 200 100 N
+ENDDRAW
+ENDDEF
+#
+#End Library

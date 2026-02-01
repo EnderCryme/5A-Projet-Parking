@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP 2920L400_15MR
+D The 2920L Series PTC provides surface mount overcurrent protection for medium voltage (60V) applications where resettable protection is desired.
+K
+F http://m.littelfuse.com/~/media/electronics/datasheets/resettable_ptcs/littelfuse_ptc_2920l_datasheet.pdf.pdf
+$ENDCMP
+#
+#End Doc Library

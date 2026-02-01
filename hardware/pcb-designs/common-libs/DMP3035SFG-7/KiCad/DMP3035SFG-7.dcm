@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP DMP3035SFG-7
+D MOSFET MOSFET BVDSS: 25V-30 PowerDI3333-8 T&R 2K
+K
+F https://www.diodes.com//assets/Datasheets/products_inactive_data/DMP3035SFG.pdf
+$ENDCMP
+#
+#End Doc Library

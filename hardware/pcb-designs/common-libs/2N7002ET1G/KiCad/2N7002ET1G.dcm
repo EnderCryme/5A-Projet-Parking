@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP 2N7002ET1G
+D Small ; Low RDS(on); Trench Technology; RoHS Compliant
+K
+F https://www.onsemi.com/pub/Collateral/2N7002E-D.PDF
+$ENDCMP
+#
+#End Doc Library

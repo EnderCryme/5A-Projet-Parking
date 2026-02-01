@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP BAT54HT1G
+D Low Forward Voltage - 0.35 Volts (Typ) @ IF = 10 mAdc; Extremely Fast Switching Speed; Device Marking: JV; NSV Prefix for Automotive and Other Applications Requiring Unique Site and Control Change Requirements; AEC Qualified and PPAP Capable
+K
+F https://www.onsemi.com/pub/Collateral/BAT54HT1-D.PDF
+$ENDCMP
+#
+#End Doc Library

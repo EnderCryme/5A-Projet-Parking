@@ -1,0 +1,9 @@
+Manufacturer=RASPBERRY-PI
+PartNumber=SC1510-A4
+PartCategory=Integrated Circuit
+PackageCategory=Quad Flat No-Lead
+PinCount=81
+Version=1.1
+Released=2025-08-22 06:35:46
+Downloaded=2025-12-02 11:19:16
+3D=Y

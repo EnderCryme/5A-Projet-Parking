@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP BQ296103DSGT
+D Battery Management 2-4S Overvoltage Protector
+K
+F http://www.ti.com/lit/ds/symlink/bq2961.pdf
+$ENDCMP
+#
+#End Doc Library

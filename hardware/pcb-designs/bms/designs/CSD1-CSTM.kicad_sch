@@ -1,0 +1,602 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "11ac451f-b81a-4cb4-82d3-49a0c5ed3b3d")
+	(paper "A4")
+	(lib_symbols
+		(symbol "Custom-Vincent:CSD17551Q3A"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "Q"
+				(at 21.59 7.62 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+				)
+			)
+			(property "Value" "CSD17551Q3A"
+				(at 21.59 5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+				)
+			)
+			(property "Footprint" "Custom-Vincent:QFN40P400X400X80-33N"
+				(at 21.59 -94.92 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "https://www.ti.com/lit/ds/symlink/csd17551q3a.pdf?ts=1644417423923&ref_url=https%253A%252F%252Fwww.mouser.in%252F"
+				(at 21.59 -194.92 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+					(hide yes)
+				)
+			)
+			(property "Description" "MOSFET 30V N-Chnl MOSFET"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Height" "0.9"
+				(at 21.59 -394.92 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+					(hide yes)
+				)
+			)
+			(property "Mouser Part Number" "595-CSD17551Q3A"
+				(at 21.59 -494.92 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+					(hide yes)
+				)
+			)
+			(property "Mouser Price/Stock" "https://www.mouser.co.uk/ProductDetail/Texas-Instruments/CSD17551Q3A?qs=vnbNJPHmPnO7TSjIVXYZRA%3D%3D"
+				(at 21.59 -594.92 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+					(hide yes)
+				)
+			)
+			(property "Manufacturer_Name" "Texas Instruments"
+				(at 21.59 -694.92 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+					(hide yes)
+				)
+			)
+			(property "Manufacturer_Part_Number" "CSD17551Q3A"
+				(at 21.59 -794.92 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+					(hide yes)
+				)
+			)
+			(symbol "CSD17551Q3A_1_1"
+				(rectangle
+					(start 5.08 2.54)
+					(end 20.32 -12.7)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin passive line
+					(at 0 0 0)
+					(length 5.08)
+					(name "S_1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -2.54 0)
+					(length 5.08)
+					(name "S_2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -5.08 0)
+					(length 5.08)
+					(name "S_3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -7.62 0)
+					(length 5.08)
+					(name "G"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -10.16 0)
+					(length 5.08)
+					(name "D_1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 25.4 0 180)
+					(length 5.08)
+					(name "D_2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 25.4 -2.54 180)
+					(length 5.08)
+					(name "D_3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "7"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 25.4 -5.08 180)
+					(length 5.08)
+					(name "D_4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "8"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 25.4 -7.62 180)
+					(length 5.08)
+					(name "D_5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "9"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(junction
+		(at 77.47 69.85)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "0aa3001e-b2b8-4f7d-8c9d-505fb3e7ab41")
+	)
+	(junction
+		(at 77.47 74.93)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "386995c8-db02-48a1-8ea0-95a50d4b7900")
+	)
+	(junction
+		(at 77.47 67.31)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "393b983f-3ec6-4c7a-a845-9c0b5d3a2c1a")
+	)
+	(junction
+		(at 77.47 72.39)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "4672f011-d512-450a-b548-5d2d556010a1")
+	)
+	(junction
+		(at 102.87 69.85)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "dbbe56d1-1a98-4d7b-aaf7-c4e9a0f3562d")
+	)
+	(wire
+		(pts
+			(xy 74.93 67.31) (xy 77.47 67.31)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0d8e8e4e-19f0-4db6-9e6f-90152e539d89")
+	)
+	(wire
+		(pts
+			(xy 77.47 69.85) (xy 77.47 72.39)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1a8d4ef3-21cc-4589-8566-9e9ea21defbd")
+	)
+	(wire
+		(pts
+			(xy 77.47 74.93) (xy 77.47 77.47)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3e9e0004-bf69-4aae-a92d-0059571ddb70")
+	)
+	(wire
+		(pts
+			(xy 102.87 77.47) (xy 77.47 77.47)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "58179c84-473d-4d99-813a-41369fb431e0")
+	)
+	(wire
+		(pts
+			(xy 102.87 67.31) (xy 102.87 69.85)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5bc35481-b8ce-4f03-8fe8-e2d7a2e6f8cc")
+	)
+	(wire
+		(pts
+			(xy 77.47 72.39) (xy 77.47 74.93)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "64cd1665-6e41-4a69-808a-53cabe162ff6")
+	)
+	(wire
+		(pts
+			(xy 77.47 67.31) (xy 77.47 69.85)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b7748583-ba23-41c7-8060-ca71a4d50a59")
+	)
+	(wire
+		(pts
+			(xy 102.87 69.85) (xy 102.87 72.39)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b98b97ec-823c-4811-91c5-e2113e6ac633")
+	)
+	(hierarchical_label "D-5,6,7,8,9-"
+		(shape bidirectional)
+		(at 74.93 67.31 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "27fbde9b-72c6-4071-a13d-f225f0cfe5c6")
+	)
+	(hierarchical_label "G-4-"
+		(shape bidirectional)
+		(at 102.87 74.93 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "6a9d7f7c-a4d7-44c8-8bff-4c504d66ff9b")
+	)
+	(hierarchical_label "S-1,2,3-"
+		(shape bidirectional)
+		(at 102.87 67.31 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "d67487c7-7db3-424b-a78b-2a722d52cc0c")
+	)
+	(symbol
+		(lib_id "Custom-Vincent:CSD17551Q3A")
+		(at 102.87 67.31 0)
+		(mirror y)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "2e44de58-ed58-4b8c-ae41-0e0a185d11d3")
+		(property "Reference" "Q3"
+			(at 90.17 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "CSD17551Q3A"
+			(at 90.17 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Custom-Vincent:CSD17551Q3A"
+			(at 81.28 162.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.ti.com/lit/ds/symlink/csd17551q3a.pdf?ts=1644417423923&ref_url=https%253A%252F%252Fwww.mouser.in%252F"
+			(at 81.28 262.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+				(hide yes)
+			)
+		)
+		(property "Description" "MOSFET 30V N-Chnl MOSFET"
+			(at 102.87 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Height" "0.9"
+			(at 81.28 462.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "595-CSD17551Q3A"
+			(at 81.28 562.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+				(hide yes)
+			)
+		)
+		(property "Mouser Price/Stock" "https://www.mouser.co.uk/ProductDetail/Texas-Instruments/CSD17551Q3A?qs=vnbNJPHmPnO7TSjIVXYZRA%3D%3D"
+			(at 81.28 662.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Name" "Texas Instruments"
+			(at 81.28 762.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "CSD17551Q3A"
+			(at 81.28 862.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+				(hide yes)
+			)
+		)
+		(property "Field5" ""
+			(at 102.87 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Number-JLCPCB" "C2876535"
+			(at 102.87 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "0761968c-9f05-4bb1-b11d-3daa39e6c751")
+		)
+		(pin "5"
+			(uuid "b7fd2f6a-18ea-4ea8-8970-3f265d835984")
+		)
+		(pin "4"
+			(uuid "6d5564f1-a792-48cc-84a7-a7be444a81a1")
+		)
+		(pin "2"
+			(uuid "1d27cc84-e0dc-42a7-846e-48768d87a825")
+		)
+		(pin "9"
+			(uuid "f7b79b29-da8d-4944-917a-5f49ababf17b")
+		)
+		(pin "7"
+			(uuid "e452eee3-65a4-4086-bece-e542d1c9bb4f")
+		)
+		(pin "8"
+			(uuid "64e0ff67-a565-4eb0-a25d-e9ff95e83a1c")
+		)
+		(pin "6"
+			(uuid "e2ade2a8-9193-435b-ba0c-55856732c597")
+		)
+		(pin "3"
+			(uuid "d16c4e1b-311c-4b6f-b4c6-c6df5a64a5ac")
+		)
+		(instances
+			(project ""
+				(path "/227c200c-c2d7-4f51-9df1-39bb2cfe1e8f/098bff6a-e4b6-41f9-af6a-ef05cb4ab0de/04a9ae1a-469d-462c-948b-d6a24eb113be"
+					(reference "Q3")
+					(unit 1)
+				)
+				(path "/227c200c-c2d7-4f51-9df1-39bb2cfe1e8f/098bff6a-e4b6-41f9-af6a-ef05cb4ab0de/08bedd97-80e9-4892-920c-c22de0d04ad9"
+					(reference "Q6")
+					(unit 1)
+				)
+				(path "/227c200c-c2d7-4f51-9df1-39bb2cfe1e8f/098bff6a-e4b6-41f9-af6a-ef05cb4ab0de/2905e631-1250-4d3e-9e1f-a744b52e99cf"
+					(reference "Q5")
+					(unit 1)
+				)
+				(path "/227c200c-c2d7-4f51-9df1-39bb2cfe1e8f/098bff6a-e4b6-41f9-af6a-ef05cb4ab0de/c431e0ff-3125-49dc-8d24-da023ff779b0"
+					(reference "Q4")
+					(unit 1)
+				)
+			)
+		)
+	)
+)

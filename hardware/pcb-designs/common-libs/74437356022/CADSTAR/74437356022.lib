@@ -1,0 +1,16 @@
+.74437356022 :1 ;WE-LHMI SMT Power Inductor Size 8030; L = 2.2 H ; IR = 8,5 A; Isat = 19,6 A; RDC = 20.30 m
+INDPM9785X300N
+*STM L
+*NGS
+*PLB 1="1" 2="2"
+*MXP 2
+*DFN 74437356022
+~!Mouser Part Number (710-74437356022)
+~!Link Mouser Price/Stock (https://www.mouser.co.uk/ProductDetail/Wurth-Elektronik/74437356022?qs=HXx4m3XcTe2b%252BsXYO2M55w%3D%3D)
+~!Manufacturer_Name (Wurth Elektronik)
+~!Manufacturer_Part_Number (74437356022)
+~!Link Datasheet (https://www.we-online.com/catalog/datasheet/74437356022.pdf)
+~!Height (3mm)
+~!3D_Model (74437356022)
+"74437356022"
+1.1!U 2.1!U 

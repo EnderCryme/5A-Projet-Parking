@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP STR2P3LLH6
+D P-channel -30 V, 48 m typ., -2 A STripFET H6 Power MOSFET in a SOT23 package
+K
+F https://www.st.com/resource/en/datasheet/str2p3llh6.pdf
+$ENDCMP
+#
+#End Doc Library

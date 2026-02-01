@@ -1,0 +1,609 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "11ac451f-b81a-4cb4-82d3-49a0c5ed3b3d")
+	(paper "A4")
+	(lib_symbols
+		(symbol "Custom-Vincent:DMP3035SFG-7"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "Q"
+				(at 21.59 7.62 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+				)
+			)
+			(property "Value" "DMP3035SFG-7"
+				(at 21.59 5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+				)
+			)
+			(property "Footprint" "Custom-Vincent:DMT6008LFG7"
+				(at 21.59 -94.92 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "https://www.diodes.com//assets/Datasheets/products_inactive_data/DMP3035SFG.pdf"
+				(at 21.59 -194.92 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+					(hide yes)
+				)
+			)
+			(property "Description" "MOSFET MOSFET BVDSS: 25V-30 PowerDI3333-8 T&R 2K"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Height" ""
+				(at 21.59 -394.92 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+					(hide yes)
+				)
+			)
+			(property "Mouser Part Number" "621-DMP3035SFG-7"
+				(at 21.59 -494.92 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+					(hide yes)
+				)
+			)
+			(property "Mouser Price/Stock" "https://www.mouser.co.uk/ProductDetail/Diodes-Incorporated/DMP3035SFG-7?qs=gfe7vQ8txpUAaXLrhqFVaQ%3D%3D"
+				(at 21.59 -594.92 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+					(hide yes)
+				)
+			)
+			(property "Manufacturer_Name" "Diodes Incorporated"
+				(at 21.59 -694.92 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+					(hide yes)
+				)
+			)
+			(property "Manufacturer_Part_Number" "DMP3035SFG-7"
+				(at 21.59 -794.92 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left top)
+					(hide yes)
+				)
+			)
+			(symbol "DMP3035SFG-7_1_1"
+				(rectangle
+					(start 5.08 2.54)
+					(end 20.32 -12.7)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin passive line
+					(at 0 0 0)
+					(length 5.08)
+					(name "S_1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -2.54 0)
+					(length 5.08)
+					(name "S_2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -5.08 0)
+					(length 5.08)
+					(name "S_3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -7.62 0)
+					(length 5.08)
+					(name "G"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -10.16 0)
+					(length 5.08)
+					(name "D_1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 25.4 0 180)
+					(length 5.08)
+					(name "D_2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 25.4 -2.54 180)
+					(length 5.08)
+					(name "D_3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "7"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 25.4 -5.08 180)
+					(length 5.08)
+					(name "D_4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "8"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 25.4 -7.62 180)
+					(length 5.08)
+					(name "D_5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "9"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(junction
+		(at 77.47 72.39)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "513508fc-8388-44fa-ae29-4bb2305ecd92")
+	)
+	(junction
+		(at 77.47 67.31)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "596eb449-cbc6-4cc7-a2fd-81380a220902")
+	)
+	(junction
+		(at 102.87 69.85)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "ba8a15fe-3617-412a-805e-0fe89e34709e")
+	)
+	(junction
+		(at 77.47 74.93)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "cbf4c568-3566-4eea-b06b-0b4fab2deab9")
+	)
+	(junction
+		(at 77.47 69.85)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "df923b78-3079-4947-b5c6-6d500a4783ea")
+	)
+	(wire
+		(pts
+			(xy 74.93 67.31) (xy 77.47 67.31)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0d8e8e4e-19f0-4db6-9e6f-90152e539d89")
+	)
+	(wire
+		(pts
+			(xy 77.47 72.39) (xy 77.47 74.93)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "294f049c-8dcf-48d3-ab32-6f860cbb9400")
+	)
+	(wire
+		(pts
+			(xy 102.87 67.31) (xy 102.87 69.85)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2c4aeeb5-ef94-4ce7-9b02-70e15e9e0953")
+	)
+	(wire
+		(pts
+			(xy 77.47 69.85) (xy 77.47 72.39)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "35f58af4-c94b-4b28-b3e9-543df32f3533")
+	)
+	(wire
+		(pts
+			(xy 102.87 77.47) (xy 77.47 77.47)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "58179c84-473d-4d99-813a-41369fb431e0")
+	)
+	(wire
+		(pts
+			(xy 102.87 69.85) (xy 102.87 72.39)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5bc35481-b8ce-4f03-8fe8-e2d7a2e6f8cc")
+	)
+	(wire
+		(pts
+			(xy 77.47 74.93) (xy 77.47 77.47)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b7748583-ba23-41c7-8060-ca71a4d50a59")
+	)
+	(wire
+		(pts
+			(xy 77.47 67.31) (xy 77.47 69.85)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c142adde-3dd3-45da-bff4-5036b69344ac")
+	)
+	(hierarchical_label "D-5,6,7,8,9-"
+		(shape bidirectional)
+		(at 74.93 67.31 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "0b55820c-142b-4873-9cbe-9a10e5f25505")
+	)
+	(hierarchical_label "S-1,2,3-"
+		(shape bidirectional)
+		(at 102.87 67.31 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "7dadebeb-1b97-44eb-80e8-cae1fb8cfe74")
+	)
+	(hierarchical_label "G-4-"
+		(shape bidirectional)
+		(at 102.87 74.93 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "e0f767d1-e964-47bb-9c1d-643fad3d4040")
+	)
+	(symbol
+		(lib_id "Custom-Vincent:DMP3035SFG-7")
+		(at 102.87 67.31 0)
+		(mirror y)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "b098567e-3609-45bf-8cd6-3f43c98963b1")
+		(property "Reference" "Q15"
+			(at 90.17 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "DMP3035SFG-7"
+			(at 90.17 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Custom-Vincent:DMT6008LFG7"
+			(at 81.28 162.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.diodes.com//assets/Datasheets/products_inactive_data/DMP3035SFG.pdf"
+			(at 81.28 262.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+				(hide yes)
+			)
+		)
+		(property "Description" "MOSFET MOSFET BVDSS: 25V-30 PowerDI3333-8 T&R 2K"
+			(at 102.87 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Height" ""
+			(at 81.28 462.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "621-DMP3035SFG-7"
+			(at 81.28 562.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+				(hide yes)
+			)
+		)
+		(property "Mouser Price/Stock" "https://www.mouser.co.uk/ProductDetail/Diodes-Incorporated/DMP3035SFG-7?qs=gfe7vQ8txpUAaXLrhqFVaQ%3D%3D"
+			(at 81.28 662.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Name" "Diodes Incorporated"
+			(at 81.28 762.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "DMP3035SFG-7"
+			(at 81.28 862.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+				(hide yes)
+			)
+		)
+		(property "Field5" ""
+			(at 102.87 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Number-JLCPCB" "C3279401"
+			(at 102.87 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "d3b5f794-d5b4-4047-81f3-0a38175a381a")
+		)
+		(pin "2"
+			(uuid "e38c98ab-5fdc-4375-a900-1adad5a7d3a2")
+		)
+		(pin "4"
+			(uuid "cdc8f7ec-b8e5-421f-86b0-893aa58bb1b4")
+		)
+		(pin "5"
+			(uuid "868368fe-5d8b-4110-b104-00febddb0ae6")
+		)
+		(pin "8"
+			(uuid "289aaaab-6081-4772-9eff-9d2e432da4d8")
+		)
+		(pin "6"
+			(uuid "88ddfcf9-8991-46dc-8db7-c4587385dda7")
+		)
+		(pin "7"
+			(uuid "36612ded-6e99-42e0-93f2-8b99aa377f3f")
+		)
+		(pin "3"
+			(uuid "ffa0c96b-9f14-459c-a06c-ac6f884bb84c")
+		)
+		(pin "9"
+			(uuid "09de0a54-b7cb-410f-8454-3eec4cb929ee")
+		)
+		(instances
+			(project "BMS"
+				(path "/227c200c-c2d7-4f51-9df1-39bb2cfe1e8f/03018a91-1e02-4c61-839f-18e93520aa3b/84ae07ff-1484-4f0d-8283-092e7240f2f0"
+					(reference "Q19")
+					(unit 1)
+				)
+				(path "/227c200c-c2d7-4f51-9df1-39bb2cfe1e8f/098bff6a-e4b6-41f9-af6a-ef05cb4ab0de/2eb7b4e8-6cb4-4435-a7a1-c9c8c38805d2"
+					(reference "Q16")
+					(unit 1)
+				)
+				(path "/227c200c-c2d7-4f51-9df1-39bb2cfe1e8f/098bff6a-e4b6-41f9-af6a-ef05cb4ab0de/f2bd03ee-9664-4e94-a8dd-548049a233a6"
+					(reference "Q15")
+					(unit 1)
+				)
+				(path "/227c200c-c2d7-4f51-9df1-39bb2cfe1e8f/1271bb03-3d0e-440b-8fbf-a834e12d30ce/84ae07ff-1484-4f0d-8283-092e7240f2f0"
+					(reference "Q20")
+					(unit 1)
+				)
+				(path "/227c200c-c2d7-4f51-9df1-39bb2cfe1e8f/601ef429-9fbd-4e1c-88af-14ecf2dfc2fe/092de423-3684-4213-9065-e2ccc04e0c8a"
+					(reference "Q22")
+					(unit 1)
+				)
+				(path "/227c200c-c2d7-4f51-9df1-39bb2cfe1e8f/ec51d673-c970-496c-8d12-924c45802bc8/092de423-3684-4213-9065-e2ccc04e0c8a"
+					(reference "Q21")
+					(unit 1)
+				)
+			)
+		)
+	)
+)

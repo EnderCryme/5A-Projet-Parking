@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP STPS5L25B-TR
+D Low drop power Schottky rectifier 5.0 Amp 25 Volt
+K
+F https://www.st.com/resource/en/datasheet/stps5l25.pdf
+$ENDCMP
+#
+#End Doc Library

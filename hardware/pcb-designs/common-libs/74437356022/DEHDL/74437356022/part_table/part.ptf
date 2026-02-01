@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART '74437356022'
+CLASS = DISCRETE
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "DESCRIPTION", "DATASHEET", "HEIGHT";
+{========================================================================================}
+ "Wurth Elektronik", "74437356022" (!) = "", "INDPM9785X300N", "Inductors Precision Moulded", "710-74437356022", "https://www.mouser.co.uk/ProductDetail/Wurth-Elektronik/74437356022?qs=HXx4m3XcTe2b%252BsXYO2M55w%3D%3D", "WE-LHMI SMT Power Inductor Size 8030; L = 2.2 H ; IR = 8,5 A; Isat = 19,6 A; RDC = 20.30 m", "https://www.we-online.com/catalog/datasheet/74437356022.pdf", "3 mm"
+END_PART
+
+END.

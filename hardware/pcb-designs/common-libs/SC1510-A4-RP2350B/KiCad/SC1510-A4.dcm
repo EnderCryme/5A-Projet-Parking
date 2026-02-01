@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP SC1510-A4
+D ARM Microcontrollers - MCU RP2350B 150MHz clock Dual Arm Cortex-M33 cores 520KB RAM 8KB on-chip QFN-80
+K
+F https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf
+$ENDCMP
+#
+#End Doc Library

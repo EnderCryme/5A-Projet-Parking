@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP ST1S14PHR
+D STMICROELECTRONICS - ST1S14PHR - DC-DC Switching Buck Step Down Regulator, Adjustable, 5.5V-48V in, 3A out, 1MHz, HSOP-8
+K
+F https://www.st.com/resource/en/datasheet/st1s14.pdf
+$ENDCMP
+#
+#End Doc Library

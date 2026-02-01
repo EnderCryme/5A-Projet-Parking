@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP SI7114DN-T1-E3
+D VISHAY - SI7114DN-T1-E3 - MOSFET, N CH, 30V, 11.7A, POWERPAK 1212
+K
+F https://www.vishay.com/docs/73039/si7114dn.pdf
+$ENDCMP
+#
+#End Doc Library

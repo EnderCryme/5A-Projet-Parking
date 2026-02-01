@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART 'STUSB4700QTR'
+CLASS = IC
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "DESCRIPTION", "DATASHEET", "HEIGHT";
+{========================================================================================}
+ "STMicroelectronics", "STUSB4700QTR" (!) = "", "QFN50P400X400X100-25N-D", "Quad Flat No-Lead", "511-STUSB4700QTR", "https://www.mouser.co.uk/ProductDetail/STMicroelectronics/STUSB4700QTR?qs=z7LT7PaeiGHOUo05EuM2ew%3D%3D", "Stand-alone autonomous USB PD controller with short-to-VBUS protections", "https://www.st.com/resource/en/datasheet/stusb4700.pdf", "1 mm"
+END_PART
+
+END.

@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART 'SC1510_A4'
+CLASS = IC
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "DESCRIPTION", "DATASHEET", "HEIGHT";
+{========================================================================================}
+ "RASPBERRY-PI", "SC1510-A4" (!) = "", "QFN40P1000X1000X90-81N-D", "Quad Flat No-Lead", "", "", "ARM Microcontrollers - MCU RP2350B 150MHz clock Dual Arm Cortex-M33 cores 520KB RAM 8KB on-chip QFN-80", "https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf", "0.9 mm"
+END_PART
+
+END.

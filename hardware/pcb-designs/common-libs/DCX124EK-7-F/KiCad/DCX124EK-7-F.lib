@@ -1,0 +1,27 @@
+EESchema-LIBRARY Version 2.3
+#encoding utf-8
+#SamacSys ECAD Model DCX124EK-7-F
+#/1380512/1633577/2.50/6/2/Transistor
+DEF DCX124EK-7-F Q 0 30 Y Y 1 F N
+F0 "Q" 750 300 50 H V L CNN
+F1 "DCX124EK-7-F" 750 200 50 H V L CNN
+F2 "SOT95P285X140-6N" 750 100 50 H I L CNN
+F3 "https://www.diodes.com//assets/Datasheets/DCX_XXXX_K.pdf" 750 0 50 H I L CNN
+F4 "Bipolar Transistors - Pre-Biased PREBIASED TRANSISTOR SOT-26 300MW" 750 -100 50 H I L CNN "Description"
+F5 "1.4" 750 -200 50 H I L CNN "Height"
+F6 "621-DCX124EK-7-F" 750 -300 50 H I L CNN "Mouser Part Number"
+F7 "https://www.mouser.co.uk/ProductDetail/Diodes-Incorporated/DCX124EK-7-F?qs=oVWkMaT70e5dmImuN6ueZA%3D%3D" 750 -400 50 H I L CNN "Mouser Price/Stock"
+F8 "Diodes Incorporated" 750 -500 50 H I L CNN "Manufacturer_Name"
+F9 "DCX124EK-7-F" 750 -600 50 H I L CNN "Manufacturer_Part_Number"
+DRAW
+X E1 1 0 0 200 R 50 50 0 0 P
+X B1 2 0 -100 200 R 50 50 0 0 P
+X C2 3 0 -200 200 R 50 50 0 0 P
+X C1 6 900 0 200 L 50 50 0 0 P
+X B2 5 900 -100 200 L 50 50 0 0 P
+X E2 4 900 -200 200 L 50 50 0 0 P
+P 5 0 1 6 200 100 700 100 700 -300 200 -300 200 100 N
+ENDDRAW
+ENDDEF
+#
+#End Library
