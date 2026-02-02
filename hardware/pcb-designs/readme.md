@@ -11,17 +11,35 @@ Tous les schémas et routages ont été réalisés sous **KiCad 7**, en respecta
 # 📁 Structure du Répertoire
 
 ```
-/hardware
-   ├── bms/
-   │   ├── BMS-gerber.zip
-   │   ├── BMS_schem.kicad_sch
-   │   ├── BMS_pcb.kicad_pcb
-   │   └── README.md
-   ├── detection-lumiere/
-   │   ├── detection-lumiere-gerber.zip
-   ├── adaptateur-24pin/
-   │   ├── adaptateur-24pin.zip
-   └── common-libs/              
+/pcb-designs
+   ├── adaptateur-24pin/            # Convertisseur Mipi to CSI
+   │   ├── GERBER-Adaptateur/
+   │   ├── Adapat_24pin_22pin.kicad_pcb
+   │   ├── Adapat_24pin_22pin.kicad_sch
+   │   └── Adapat_24pin_22pin.rar
+   ├── bms/                            # Layout et ressources de design du BMS
+   │   ├── calculations/               # Justifications techniques
+   │   │   ├── load_estimation.csv
+   │   │   └── pack_4S3P_energy.csv
+   │   ├── designs/                    # Sources du projet KiCad
+   │   │   ├── BMS.csv                 # BOM compatible JLCPCB
+   │   │   ├── BMS_schem.kicad_prl     # Fichier projet KiCad du BMS
+   │   │   ├── BMS_schem.kicad_sch     # Schématique complet
+   │   │   ├── BMS_pcb.kicad_pcb       # Routage (4 couches, impédance contrôlée)
+   │   │   ├── BMS.pdf                 # Feuilles circuits au format pdf ⚠ Ne pas imprimer comme tel,
+   │   │   └── ....                      il y'a des feuilles inutiles utilisés pour simplifié le circuitage
+   │   ├── references/                 # Datasheets composants (STM32, STUSB...)
+   │   ├── test-EVM/                   # Tests sur carte d'évaluation (BQ40Z50)
+   │   ├── BMS_schem.png
+   │   ├── bilan-puissance-max.png
+   │   ├── readme.md
+   │   └── .... ⚠ le firmware RP2350 est trouvable au : /software/sw-fw-BMS
+   ├── common-libs/                    # Lib cstm avec les empreintes steps et schémas utilisés
+   └── detection-lumiere/              # Détection d'intensité lumineuse
+       ├── Gerber/
+       ├── Lumiere.kicad_pcb
+       ├── Lumiere.kicad_sch
+       └── readme.md         
 ```
 
 ---
