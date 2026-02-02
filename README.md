@@ -127,7 +127,12 @@ Le système repose sur un réseau local Ethernet fermé. La **BeagleY-AI** agit 
     *   Ouvrir Vivado Hardware Manager.
     *   Charger le bitstream situé dans `gateware/fpga/v3-test-autorun`.
     *   *Résultat :* Le SoC démarre, charge le Linux depuis la carte SD et rejoint le réseau automatiquement.
-
+      
+4.  **BMS (Flashage MicroPython) :**
+    *   **Reset :** Maintenir **SW2** (USB_BOOT) et brancher le RP2350 en USB.
+    *   **Firmware :** Copier le fichier `.uf2` Pico 2 (dispo sur [micropython.org](https://micropython.org/download/RPI_PICO2/)) dans le lecteur `RPI-RP3`.
+    *   **Code :** Ouvrir **Thonny IDE** et transférer `ssd1306.py` et `main.py` à la racine.
+    *   *Note :* Grâce à l'autorun, `main.py` s'exécute automatiquement dès l'alimentation batterie.
 ---
 
 ## 📚 Références
