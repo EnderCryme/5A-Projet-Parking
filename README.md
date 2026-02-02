@@ -3,7 +3,6 @@
 
 ![Status](https://img.shields.io/badge/Status-Prototype_Fonctionnel-success)
 ![Architecture](https://img.shields.io/badge/Architecture-Distributed_IoT-blueviolet)
-![License](https://img.shields.io/badge/License-MIT-grey)
 
 **Plateformes :**
 ![BeagleY-AI](https://img.shields.io/badge/Brain-BeagleY--AI-blue)
