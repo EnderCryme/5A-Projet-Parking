@@ -15,13 +15,23 @@ Tout est conçu sous **KiCad 7**, avec une attention particulière aux contraint
 # 📁 Structure du Répertoire
 
 ```
-/bms
- ├── BMS_schem.kicad_sch    # Schématique complet
- ├── BMS_pcb.kicad_pcb      # Routage (4 couches, impédance contrôlée)
- ├── README.md              # Ce document
- └── calculations/          # Justifications techniques
-        ├── pack_4S3P_energy.xlsx
-        └── load_estimation.xlsx
+bms/                               # Layout et ressources de design du BMS
+   ├── calculations/               # Justifications techniques
+   │   ├── load_estimation.csv
+   │   └── pack_4S3P_energy.csv
+   ├── designs/                    # Sources du projet KiCad
+   │   ├── BMS.csv                 # BOM compatible JLCPCB
+   │   ├── BMS_schem.kicad_prl     # Fichier projet KiCad du BMS
+   │   ├── BMS_schem.kicad_sch     # Schématique complet
+   │   ├── BMS_pcb.kicad_pcb       # Routage (4 couches, impédance contrôlée)
+   │   ├── BMS.pdf                 # Feuilles circuits au format pdf ⚠ Ne pas imprimer comme tel,
+   │   └── ....                      il y'a des feuilles inutiles utilisés pour simplifié le circuitage
+   ├── references/                 # Datasheets composants (STM32, STUSB...)
+   ├── test-EVM/                   # Tests sur carte d'évaluation (BQ40Z50)
+   ├── BMS_schem.png
+   ├── bilan-puissance-max.png
+   ├── readme.md
+   └── .... ⚠ le firmware RP2350 est trouvable au : /software/sw-fw-BMS
 ```
 
 ---
