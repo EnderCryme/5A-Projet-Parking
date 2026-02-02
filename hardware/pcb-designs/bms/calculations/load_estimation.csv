@@ -1,19 +1,23 @@
-COMPOSANT,TENSION (V),COURANT MAX (A),PUISSANCE MAX (W),PUISSANCE MOY (W),COMMENTAIRE
-"BeagleBone AI-64",5.0,3.0,15.0,10.0,"CPU/GPU charge lourde"
-"FPGA Nexys A7",5.0,1.0,5.0,2.5,"Logique programmée"
-"STM32 & Capteurs",3.3,0.5,1.65,0.5,"MCU Control loop"
-"Moteurs (Driver)",16.8,2.5,42.0,25.0,"Pics d'accélération vs croisière"
-"BMS (Logique + Pertes)",3.3,0.3,1.0,0.5,"Conso propre + rendement conv."
-"Ventilateur & OLED",5.0,0.4,2.0,1.5,"Refroidissement actif si > 40°C"
-"TOTAL THEORIQUE",,,66.65,40.0,"Somme des consos"
-,,,,
-"SCENARIOS D'USAGE",PUISSANCE (W),AUTONOMIE BATTERIE (H),AUTONOMIE AVEC SOLAIRE 50W (H),NOTES
-"Mode Repos (Idle)",18,8.39,INFINI,"Charge batterie (+32W)"
-"Mode Mixte (Standard)",40,3.78,INFINI,"Charge batterie (+10W)"
-"Mode Intensif (Full Load)",65,2.32,10.07,"Décharge lente (-15W net)"
-,,,,
-"BILAN SMART GRID (SOLAIRE)",,,
-"Apport Solaire",50,W,"Panneau standard / USB-PD 20V"
-"Charge Robot (Intensif)",65,W,
-"Soulagement Batterie",77,%, "=(50/65)*100"
-"Gain Autonomie",4.3,x,"Facteur multiplicateur (10h vs 2.3h)"
+PARAMETRES GLOBAUX;VALEUR;UNITE;COMMENTAIRE
+ENERGIE BATTERIE (Wh);151,2;Wh;Pack 4S3P (14,4V * 10,5Ah)
+APPORT SOLAIRE (W);50;W;Panneau via USB-PD
+;;;
+COMPOSANT;TENSION (V);COURANT MAX (A);PUISSANCE MAX (W);PUISSANCE MOY (W);COMMENTAIRE
+BeagleBone AI-64;5,0;3,0;=B6*C6;10,0;CPU/GPU charge lourde
+FPGA Nexys A7;5,0;1,0;=B7*C7;2,5;Logique programmee
+STM32 & Capteurs;3,3;0,5;=B8*C8;0,5;MCU Control loop
+Moteurs (Driver);16,8;2,5;=B9*C9;25,0;Pics d'acceleration vs croisiere
+BMS (Logique + Pertes);3,3;0,3;=B10*C10;0,5;Conso propre + rendement conv.
+Ventilateur & OLED;5,0;0,4;=B11*C11;1,5;Refroidissement actif si > 40C
+TOTAL THEORIQUE;;;=SOMME(D6:D11);=SOMME(E6:E11);Somme des consos
+;;;;;
+SCENARIOS D'USAGE;PUISSANCE (W);AUTONOMIE BATTERIE (H);AUTONOMIE AVEC SOLAIRE (H);NOTES
+Mode Repos (Idle);18;=$B$2/B15;=SI(B15<$B$3;"INFINI";$B$2/(B15-$B$3));Charge batterie (Excédent solaire)
+Mode Mixte (Standard);40;=$B$2/B16;=SI(B16<$B$3;"INFINI";$B$2/(B16-$B$3));Charge batterie (Excédent faible)
+Mode Intensif (Full Load);=E12;=$B$2/B17;=SI(B17<$B$3;"INFINI";$B$2/(B17-$B$3));Decharge lente (Solaire insuffisant)
+;;;;;
+BILAN SMART GRID (SOLAIRE);VALEUR;UNITE;FORMULE / COMMENTAIRE;
+Apport Solaire;=$B$3;W;Reference cellule B3;
+Charge Robot (Intensif);=B17;W;Reference Mode Intensif;
+Soulagement Batterie;=(B21/B22);%;=Apport/Charge;
+Gain Autonomie;=(D17/C17);x;=Autonomie Solaire / Autonomie Sans;
