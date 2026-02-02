@@ -1,6 +1,4 @@
-# 🔋 Firmware/Software BMS Intelligent 
-
-## 📖 Présentation Logicielle
+# Firmware/Software BMS Intelligent 
 
 Cette section contient le firmware de contrôle pour le sous-ensemble BMS. Développé en **MicroPython**, ce logiciel transforme le RP2350 en une unité de gestion intelligente capable de dialoguer avec le contrôleur **BQ40Z50** via le protocole **SMBus**.
 
@@ -49,32 +47,26 @@ L'affichage est rafraîchi toutes les secondes et présente un dashboard complet
 * **Ligne 3** : Barre de progression graphique du niveau de batterie.
 
 ## 📂 Structure des fichiers Software
-
-* `/firmware/main.py` : Logique métier et boucle principale.
-* `/firmware/ssd1306.py` : Bibliothèque d'affichage I2C.
-* `/docs/registers.md` : Liste des commandes SMBus utilisées.
+```text
+sw-fw-BMS/
+ ├── BMS_schem.png    # Schéma récapitulatif de l'architecture du BMS
+ ├── README.md
+ ├── main.py          # Logique métier et boucle principale.
+ └── ssd1306.py       # Bibliothèque d'affichage I2C.
+```
 
 ---
-
-> [!TIP]
-> **Le savais-tu ?** En nommant ton fichier `main.py`, le RP2350 l'exécute dès qu'il reçoit du courant, même sans être branché à un ordinateur. C'est ce qu'on appelle l'**autorun**.
 
 ### 📑 Table des Commandes I2C (SMBus/Relier aux registres visibles sur le BQstudio)
 
 | Commande | Registre (Hex) | Unité | Description |
 | --- | --- | --- | --- |
 | **Temperature** | `0x08` | 0.1°K | Température interne du pack (convertie en °C dans le code).
-
- |
 | **Voltage** | `0x09` | mV | Tension totale aux bornes du pack batterie.
-
- |
 | **Current** | `0x0A` | mA | Courant instantané (positif = charge, négatif = décharge).
-
- |
 | **RelativeSoC** | `0x0D` | % | État de charge restant par rapport à la capacité actuelle.
 
- |
+
 
 ---
 
