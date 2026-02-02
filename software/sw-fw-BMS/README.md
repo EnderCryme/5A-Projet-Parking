@@ -2,7 +2,7 @@
 
 ## 📖 Présentation Logicielle
 
-Ce dépôt contient le firmware de contrôle pour le sous-ensemble BMS. Développé en **MicroPython**, ce logiciel transforme le RP2350 en une unité de gestion intelligente capable de dialoguer avec le contrôleur **BQ40Z50** via le protocole **SMBus**.
+Cette section contient le firmware de contrôle pour le sous-ensemble BMS. Développé en **MicroPython**, ce logiciel transforme le RP2350 en une unité de gestion intelligente capable de dialoguer avec le contrôleur **BQ40Z50** via le protocole **SMBus**.
 
 Le code assure la lecture des paramètres critiques de la batterie, la gestion de l'affichage local et le pilotage des sécurités de l'étage de puissance.
 
