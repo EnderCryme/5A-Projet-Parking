@@ -14,10 +14,10 @@
 ## 🏅 **Award & Recognition**
 We are proud to announce that **PSM won the "Most Technical Project" award** at [Name of Competition/Event]!
 Our solution stood out for its:
-✅ **Distributed IoT architecture** combining FPGA, STM32, and BeagleY-AI
-✅ **Custom RISC-V SoC** implemented on FPGA
-✅ **Real-time ANPR system** with OpenCV + Tesseract
-✅ **Industrial-grade implementation** with Zephyr RTOS
+* ✅ **Distributed IoT architecture** combining FPGA, STM32, and BeagleY-AI
+* ✅ **Custom RISC-V SoC** implemented on FPGA
+* ✅ **Real-time ANPR system** with OpenCV + Tesseract
+* ✅ **Industrial-grade implementation** with Zephyr RTOS
 
 <div align="center">
   <img src="docs/images/maquette.jpg" alt="3D Model" width="400"/>
