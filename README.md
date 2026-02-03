@@ -5,7 +5,7 @@
 ![Architecture](https://img.shields.io/badge/Architecture-Distributed_IoT-blueviolet)
 
 <div align="center">
-  <img src="docs/images/project_photo.jpg" alt="PSM Prototype" width="600"/>
+  <img src="references/img/Maquette.png" alt="PSM Prototype" width="600"/>
   <p><em>Our award-winning prototype at the competition</em></p>
 </div>
 
@@ -19,7 +19,7 @@ Our solution stood out for its:
 * ✅ **Industrial-grade implementation** with Zephyr RTOS
 
 <div align="center">
-  <img src="docs/images/maquette.jpg" alt="3D Model" width="400"/>
+  <img src="docs/images/Maquette_3D.png" alt="3D Model" width="400"/>
   <p><em>3D model of our mechanical design</em></p>
 </div>
 
@@ -61,14 +61,12 @@ For full project details, please select your preferred language:
 <div align="center">
   <table>
     <tr>
-      <td><img src="references/images/system_overview.jpg" width="300"/></td>
-      <td><img src="docs/images/rfid_module.jpg" width="300"/></td>
-      <td><img src="docs/images/fpga_board.jpg" width="300"/></td>
+      <td><img src="references/img/Architecture.png" width="300"/></td>
+      <td><img src="references/img/STM32_RFID.png" width="300"/></td>
     </tr>
     <tr>
       <td align="center"><em>Complete system</em></td>
       <td align="center"><em>RFID entry module</em></td>
-      <td align="center"><em>FPGA control board</em></td>
     </tr>
   </table>
 </div>
