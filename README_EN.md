@@ -139,7 +139,3 @@ The system operates on a closed local Ethernet network. The **BeagleY-AI** serve
 * [Complete Documentation (PDF)](references/Projet_CAUQUIL_FALDA_CLERVILLE_ES-SRIEJ.pdf)
 * [LiteX - Linux on RISC-V](https://github.com/litex-hub/linux-on-litex-vexriscv)
 * [Battery Management ICs](https://www.ti.com/product-category/battery-management-ics/overview.html)
-
-7. Ensured consistent terminology throughout the document
-
-The English version is now fully synchronized with the French version while maintaining technical accuracy.
