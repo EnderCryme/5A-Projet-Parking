@@ -30,8 +30,8 @@ Our solution stood out for its:
 ## 🌍 **Choose Your Language**
 For full project details, please select your preferred language:
 
-🇫🇷 **[Version Française (README_fr.md)](README_fr.md)**
-🇬🇧 **[English Version (README_en.md)](README_en.md)**
+🇫🇷 **[Version Française (README_fr.md)](README_FR.md)**
+🇬🇧 **[English Version (README_en.md)](README_EN.md)**
 
 ---
 
@@ -75,4 +75,4 @@ For full project details, please select your preferred language:
   </table>
 </div>
 
-> *Note: For more images and technical diagrams, please refer to the full documentation in [README_fr.md](README_fr.md) or [README_en.md](README_en.md).*
+> *Note: For more images and technical diagrams, please refer to the full documentation in [README_fr.md](README_FR.md) or [README_en.md](README_EN.md).*
