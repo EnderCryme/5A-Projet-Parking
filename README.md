@@ -61,7 +61,7 @@ For full project details, please select your preferred language:
 <div align="center">
   <table>
     <tr>
-      <td><img src="references/img/Architecture.png" width="300"/></td>
+      <td><img src="references/img/architecture.png" width="300"/></td>
       <td><img src="references/img/STM32_RFID.png" width="300"/></td>
     </tr>
     <tr>
