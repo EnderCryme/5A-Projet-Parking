@@ -3,7 +3,6 @@
 
 ![Project Status](https://img.shields.io/badge/Status-Award_Winning-success)
 ![Architecture](https://img.shields.io/badge/Architecture-Distributed_IoT-blueviolet)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 <div align="center">
   <img src="docs/images/project_photo.jpg" alt="PSM Prototype" width="600"/>
