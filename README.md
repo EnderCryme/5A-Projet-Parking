@@ -1,5 +1,5 @@
 # 🏆 PSM - Modular Smart Parking System
-### *Winner of the "Most Technical Project" Award*
+### *Winner of "Most Technical Project" - Digital Majors Competition 2025*
 
 ![Project Status](https://img.shields.io/badge/Status-Award_Winning-success)
 ![Architecture](https://img.shields.io/badge/Architecture-Distributed_IoT-blueviolet)
@@ -10,9 +10,8 @@
 </div>
 
 ---
-
 ## 🏅 **Award & Recognition**
-We are proud to announce that **PSM won the "Most Technical Project" award** at [Name of Competition/Event]!
+We are proud to announce that **PSM won the "Most Technical Project" award** at Digital Majors Competition 2025 !
 Our solution stood out for its:
 * ✅ **Distributed IoT architecture** combining FPGA, STM32, and BeagleY-AI
 * ✅ **Custom RISC-V SoC** implemented on FPGA
@@ -62,7 +61,7 @@ For full project details, please select your preferred language:
 <div align="center">
   <table>
     <tr>
-      <td><img src="docs/images/system_overview.jpg" width="300"/></td>
+      <td><img src="references/images/system_overview.jpg" width="300"/></td>
       <td><img src="docs/images/rfid_module.jpg" width="300"/></td>
       <td><img src="docs/images/fpga_board.jpg" width="300"/></td>
     </tr>
