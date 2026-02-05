@@ -19,7 +19,7 @@ Our solution stood out for its:
 * ✅ **Industrial-grade implementation** with Zephyr RTOS
 
 <div align="center">
-  <img src="docs/images/Maquette_3D.png" alt="3D Model" width="400"/>
+  <img src="references/img/maquette_3d.png" alt="3D Model" width="800"/>
   <p><em>3D model of our mechanical design</em></p>
 </div>
 
